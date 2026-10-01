@@ -33,6 +33,8 @@ export interface PirateTestApi {
   resumeClock(): void
   /** Runs `ms` of game time through the real step + render path. */
   advance(ms: number): void
+  /** Starts a new match, as the result screen's "Play again" will. */
+  restart(): void
 }
 
 declare global {
