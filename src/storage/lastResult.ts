@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { endReasonSchema } from '../api/contracts'
 import { readStored, removeStored, writeStored } from './local'
 
 const KEY = 'last-result'
@@ -13,7 +14,7 @@ export const matchResultSchema = z.object({
   score: z.int().nonnegative(),
   /** Simulated time played, in whole milliseconds. */
   durationMs: z.int().nonnegative(),
-  endReason: z.enum(['timeUp', 'playerDestroyed']),
+  endReason: endReasonSchema,
   /** ISO 8601 timestamp of the end of the match. */
   playedAt: z.iso.datetime(),
   /** The options the match was played with. */
