@@ -15,7 +15,14 @@ export async function openGame(
     seed = 1,
     fixture,
     spawn = false,
-  }: { seed?: number; fixture?: string; spawn?: boolean } = {},
+    scenario,
+  }: {
+    seed?: number
+    fixture?: string
+    spawn?: boolean
+    /** Mock network scenario (src/mocks/scenarios.ts). */
+    scenario?: string
+  } = {},
 ): Promise<void> {
   const params = new URLSearchParams({
     test: '1',
@@ -24,6 +31,7 @@ export async function openGame(
   })
   if (fixture) params.set('fixture', fixture)
   if (!spawn) params.set('spawn', 'off')
+  if (scenario) params.set('scenario', scenario)
   await page.goto(`/?${params.toString()}#/play`)
   await expect(page.locator('.game-host')).toHaveAttribute(
     'data-status',
@@ -75,7 +83,34 @@ export async function resumeClock(page: Page): Promise<void> {
 export const STORAGE_KEYS = {
   options: 'pirate-battle:options',
   lastResult: 'pirate-battle:last-result',
+  outbox: 'pirate-battle:outbox',
+  mockDb: 'pirate-battle:mock-db',
+  scenario: 'pirate-battle:scenario',
 } as const
+
+/** Records the mock server has confirmed, straight from its storage. */
+export async function readMockDb(
+  page: Page,
+): Promise<{ matchId: string; playerId: string }[]> {
+  const raw = await readStorage(page, STORAGE_KEYS.mockDb)
+  if (raw === null) return []
+  return (
+    JSON.parse(raw) as { matches: { matchId: string; playerId: string }[] }
+  ).matches
+}
+
+/** Match records still waiting to be confirmed by the server. */
+export async function readOutbox(page: Page): Promise<{ matchId: string }[]> {
+  const raw = await readStorage(page, STORAGE_KEYS.outbox)
+  if (raw === null) return []
+  return (JSON.parse(raw) as { records: { matchId: string }[] }).records
+}
+
+/** Switches the mock network scenario through the Network panel. */
+export async function chooseScenario(page: Page, name: string): Promise<void> {
+  await page.goto('/#/network')
+  await page.getByRole('radio', { name, exact: true }).check()
+}
 
 export function readStorage(page: Page, key: string): Promise<string | null> {
   return page.evaluate((name) => window.localStorage.getItem(name), key)
