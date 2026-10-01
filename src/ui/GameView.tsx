@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { navigate } from '../app/router'
 import type { SessionOptions } from '../engine/GameSession'
+import { TouchControls } from '../input/TouchControls'
 import { saveLastResult } from '../storage/lastResult'
 import { loadOptions } from '../storage/options'
 import { Announcer } from './Announcer'
@@ -71,6 +72,9 @@ export function GameView() {
             controls.retry()
           }}
         />
+      )}
+      {(status === 'running' || status === 'paused') && (
+        <TouchControls input={controls} />
       )}
       <PauseDialog
         open={status === 'paused'}

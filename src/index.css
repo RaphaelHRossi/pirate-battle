@@ -620,6 +620,124 @@ body,
   font-size: 0.85rem;
 }
 
+/* --- Touch controls (laid out like assets/sample.png) --------------------- */
+
+.touch-controls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .touch-controls {
+    display: block;
+    position: absolute;
+    inset: auto 0 0;
+    pointer-events: none;
+  }
+}
+
+.touch-cluster {
+  --touch-size: 72px;
+  position: absolute;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template:
+    '. top .' var(--touch-size)
+    'left . right' var(--touch-size)
+    / var(--touch-size) var(--touch-size) var(--touch-size);
+  gap: 0 4px;
+}
+
+.touch-cluster--steer {
+  left: max(12px, env(safe-area-inset-left));
+}
+
+.touch-cluster--guns {
+  right: max(12px, env(safe-area-inset-right));
+}
+
+@media (max-height: 420px) {
+  .touch-cluster {
+    --touch-size: 60px;
+  }
+}
+
+.touch-button {
+  display: grid;
+  place-items: center;
+  width: var(--touch-size);
+  height: var(--touch-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--normal) center / 100% 100% no-repeat;
+  pointer-events: auto;
+  /* The page must not scroll, zoom or select while a finger is down. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-button[data-pressed] {
+  background-image: var(--pressed);
+}
+
+.touch-button img {
+  width: 50%;
+  height: 50%;
+  pointer-events: none;
+}
+
+.touch-button--top {
+  grid-area: top;
+}
+
+.touch-button--left {
+  grid-area: left;
+}
+
+.touch-button--right {
+  grid-area: right;
+}
+
+/* --- Portrait on a touch screen: landscape only --------------------------- */
+
+.rotate-device {
+  display: none;
+}
+
+/* Same query as PORTRAIT_TOUCH_QUERY in src/input/orientation.ts. */
+@media (orientation: portrait) and (pointer: coarse) {
+  .rotate-device {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-content: center;
+    padding: 24px;
+    background: #0a1f2e;
+    color: var(--parchment);
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .rotate-device p {
+    margin: 4px 0;
+  }
+
+  /* The match has paused itself; the dialog (top layer) would cover this. */
+  .pause-dialog,
+  .pause-dialog::backdrop {
+    display: none;
+  }
+}
+
+.rotate-device-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
 .render-counter {
   position: absolute;
   left: 8px;

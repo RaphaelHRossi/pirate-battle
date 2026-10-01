@@ -4,6 +4,7 @@ import { GameView } from '../ui/GameView'
 import { MainMenu } from '../ui/MainMenu'
 import { OptionsScreen } from '../ui/OptionsScreen'
 import { ResultScreen } from '../ui/ResultScreen'
+import { RotateDevice } from '../ui/RotateDevice'
 import { navigate, parseRoute, useHash, type Route } from './router'
 
 function Screen({ route }: { route: Route }) {
@@ -33,5 +34,10 @@ export function App() {
     if (unknown) navigate({ name: 'menu' }, { replace: true })
   }, [unknown])
 
-  return <Screen route={route ?? { name: 'menu' }} />
+  return (
+    <>
+      <Screen route={route ?? { name: 'menu' }} />
+      <RotateDevice />
+    </>
+  )
 }

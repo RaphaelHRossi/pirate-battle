@@ -6,6 +6,7 @@ import {
 } from 'react'
 import { GameSession, type SessionOptions } from '../engine/GameSession'
 import { INITIAL_SNAPSHOT, type GameSnapshot } from '../engine/snapshot'
+import type { Intent } from '../input/intents'
 
 /**
  * A stable store React can subscribe to for the component's whole life,
@@ -57,6 +58,15 @@ class SessionHandle {
     void this.session?.retry()
   }
 
+  // Arrow properties: passed to <TouchControls> as a stable object.
+  readonly press = (pointerId: number, intent: Intent): void => {
+    this.session?.pressTouch(pointerId, intent)
+  }
+
+  readonly release = (pointerId: number): void => {
+    this.session?.releaseTouch(pointerId)
+  }
+
   private emit(): void {
     for (const listener of this.listeners) listener()
   }
@@ -66,6 +76,8 @@ export interface GameSessionControls {
   pause(): void
   resume(): void
   retry(): void
+  press(pointerId: number, intent: Intent): void
+  release(pointerId: number): void
 }
 
 /**
