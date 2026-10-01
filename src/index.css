@@ -1,3 +1,27 @@
+:root {
+  --ink: #2b1a0e;
+  --parchment: #f6e7c8;
+  --wood: #8a4f24;
+  --wood-dark: #5a3214;
+  --gold: #f2b84b;
+  --focus: #ffd84d;
+  /* HUD art is drawn at 1×; shrink it on small (landscape phone) screens. */
+  --hud-scale: 1;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+}
+
+@media (max-height: 640px) {
+  :root {
+    --hud-scale: 0.75;
+  }
+}
+
+@media (max-height: 420px) {
+  :root {
+    --hud-scale: 0.55;
+  }
+}
+
 html,
 body,
 #root {
@@ -6,10 +30,35 @@ body,
   background: #000;
 }
 
-.game-host {
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* --- Match screen ------------------------------------------------------ */
+
+.game-screen {
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.game-host {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -17,12 +66,210 @@ body,
   display: block;
 }
 
-.game-error {
+/* --- HUD (matches assets/sample.png) ------------------------------------ */
+
+.hud {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: calc(12px * var(--hud-scale));
+  pointer-events: none;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 2px 2px rgb(0 0 0 / 60%);
+}
+
+.hud p {
+  margin: 0;
+}
+
+.hud-health {
+  display: flex;
+  align-items: center;
+  gap: calc(6px * var(--hud-scale));
+}
+
+.hud-heart,
+.hud-counter-icon {
+  width: calc(48px * var(--hud-scale));
+  height: calc(48px * var(--hud-scale));
+}
+
+.hud-bar {
+  position: relative;
+  width: calc(var(--bar-w) * var(--hud-scale) * 1px);
+  height: calc(var(--bar-h) * var(--hud-scale) * 1px);
+}
+
+.hud-bar-frame {
   position: absolute;
   inset: 0;
-  margin: auto;
-  height: fit-content;
+  width: 100%;
+  height: 100%;
+}
+
+/* Window onto the fill art: positioned on fill_rect, as wide as the hp. */
+.hud-bar-fill {
+  position: absolute;
+  left: calc(var(--fill-x) * var(--hud-scale) * 1px);
+  top: calc(var(--fill-y) * var(--hud-scale) * 1px);
+  width: calc(var(--fill-w) * var(--hud-scale) * 1px);
+  height: calc(var(--fill-h) * var(--hud-scale) * 1px);
+  overflow: hidden;
+}
+
+.hud-bar-fill img {
+  position: absolute;
+  left: calc(var(--fill-x) * var(--hud-scale) * -1px);
+  top: calc(var(--fill-y) * var(--hud-scale) * -1px);
+  width: calc(var(--bar-w) * var(--hud-scale) * 1px);
+  height: calc(var(--bar-h) * var(--hud-scale) * 1px);
+}
+
+.hud-bar-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(17px * var(--hud-scale));
+}
+
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: calc(14px * var(--hud-scale));
+}
+
+.hud-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--hud-scale));
+  width: calc(160px * var(--hud-scale));
+  height: calc(56px * var(--hud-scale));
+  background: url('/assets/png/default/ui/hud/counter_panel.png') center / 100%
+    100% no-repeat;
+  font-size: calc(24px * var(--hud-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.round-button {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: calc(64px * var(--hud-scale));
+  height: calc(64px * var(--hud-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--normal) center / 100% 100% no-repeat;
+  cursor: pointer;
+}
+
+.round-button:hover {
+  background-image: var(--hover);
+}
+
+.round-button:active {
+  background-image: var(--pressed);
+}
+
+.round-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.round-button img {
+  width: calc(32px * var(--hud-scale));
+  height: calc(32px * var(--hud-scale));
+}
+
+/* --- Overlays and dialogs ----------------------------------------------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(4 24 40 / 70%);
+}
+
+.overlay-panel,
+.pause-dialog {
+  max-width: min(90vw, 420px);
+  padding: 24px 28px;
+  border: 4px solid var(--wood);
+  border-radius: 16px;
+  background: var(--parchment);
+  color: var(--ink);
   text-align: center;
-  color: #fff;
-  font-family: system-ui, sans-serif;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+.overlay-panel h2,
+.pause-dialog h2 {
+  margin: 0 0 12px;
+  color: var(--wood-dark);
+}
+
+.overlay-panel progress {
+  width: 100%;
+  height: 18px;
+  accent-color: var(--wood);
+}
+
+.pause-dialog::backdrop {
+  background: rgb(4 24 40 / 60%);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dialog-note {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.menu-button {
+  min-width: 140px;
+  padding: 12px 20px;
+  border: 3px solid var(--wood-dark);
+  border-radius: 12px;
+  background: #e9d3a6;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-button--primary {
+  background: var(--gold);
+}
+
+.menu-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.menu-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.render-counter {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 60%);
+  color: #9f9;
+  font: 12px monospace;
+  pointer-events: none;
 }

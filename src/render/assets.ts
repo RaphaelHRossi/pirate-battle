@@ -4,8 +4,6 @@ import { MAP_TILE_IDS, type TileTextures } from './views/IslandsView'
 
 const base = import.meta.env.BASE_URL
 
-const GAME_BUNDLE = 'game'
-
 const tileAlias = (id: number): string => `tile_${String(id)}`
 const tileUrl = (id: number): string =>
   `${base}assets/png/default/tiles/tile_${String(id)}.png`
@@ -120,26 +118,61 @@ function toGameTextures(loaded: Record<string, unknown>): GameTextures {
   }
 }
 
-let bundleAdded = false
+let registered = false
 let pending: Promise<GameTextures> | null = null
 
 /**
  * Loads the gameplay textures once and caches them for the lifetime of the
  * page. Textures are shared by every GameSession and never destroyed on
- * restart. On failure the memo is cleared, so a later call retries.
+ * restart. `onProgress` receives 0..1 as assets finish.
+ *
+ * Every asset is loaded on its own (`Assets.load` per alias) instead of
+ * with `Assets.loadBundle`: a bundle is all-or-nothing, so after one
+ * failure Pixi would fetch the whole set again. Loaded one by one, each
+ * success stays in the Assets cache, and a retry (calling this again after
+ * a rejection) only requests what failed.
  */
-export function loadGameAssets(): Promise<GameTextures> {
-  if (!bundleAdded) {
-    Assets.addBundle(GAME_BUNDLE, gameManifest)
-    bundleAdded = true
+export function loadGameAssets(
+  onProgress?: (progress: number) => void,
+): Promise<GameTextures> {
+  const aliases = Object.keys(gameManifest)
+  if (!registered) {
+    for (const alias of aliases) {
+      Assets.add({ alias, src: gameManifest[alias] ?? '' })
+    }
+    registered = true
   }
-  pending ??= (
-    Assets.loadBundle(GAME_BUNDLE) as Promise<Record<string, unknown>>
-  )
+  pending ??= loadAll(aliases, onProgress)
     .then(toGameTextures)
     .catch((error: unknown) => {
       pending = null
       throw error
     })
   return pending
+}
+
+async function loadAll(
+  aliases: string[],
+  onProgress?: (progress: number) => void,
+): Promise<Record<string, unknown>> {
+  let settled = 0
+  const results = await Promise.allSettled(
+    aliases.map(async (alias) => {
+      try {
+        return [alias, await Assets.load<unknown>(alias)] as const
+      } finally {
+        settled += 1
+        onProgress?.(settled / aliases.length)
+      }
+    }),
+  )
+  const failed = aliases.filter((_, i) => results[i]?.status === 'rejected')
+  if (failed.length > 0) {
+    throw new Error(`Failed to load game assets: ${failed.join(', ')}`)
+  }
+  return Object.fromEntries(
+    results.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value] : [],
+    ),
+  )
 }

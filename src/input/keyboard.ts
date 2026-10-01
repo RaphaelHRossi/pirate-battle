@@ -108,19 +108,3 @@ export function attachKeyboard(
     },
   }
 }
-
-/** While paused, only the pause keys are listened to, to resume. */
-export function attachResumeKeys(
-  onResume: () => void,
-  signal: AbortSignal,
-): void {
-  window.addEventListener(
-    'keydown',
-    (event) => {
-      if (hasModifier(event) || !PAUSE_CODES.has(event.code)) return
-      event.preventDefault()
-      if (!event.repeat) onResume()
-    },
-    { signal },
-  )
-}
