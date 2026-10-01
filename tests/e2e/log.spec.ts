@@ -121,3 +121,69 @@ test('out-of-order responses never replace the page asked for last', async ({
   const page2 = answered.indexOf('2')
   if (page2 !== -1) expect(page2).toBeGreaterThan(answered.indexOf('3'))
 })
+
+/** Seeds this browser's player and `count` of their matches in the mock DB. */
+async function seedHistory(page: Page, count: number): Promise<void> {
+  await page.goto('/')
+  await page.evaluate(
+    ({ count, keys }) => {
+      const playerId = crypto.randomUUID()
+      const matches = Array.from({ length: count }, (_, i) => ({
+        matchId: crypto.randomUUID(),
+        playerId,
+        playerName: 'Captain Test',
+        // One match per hour, the newest last.
+        playedAt: new Date(Date.UTC(2026, 8, 1, i)).toISOString(),
+        score: i,
+        durationMs: 120_000,
+        endReason: i % 2 === 0 ? 'timeUp' : 'playerDestroyed',
+        config: { sessionSeconds: 120, spawnSeconds: 3 },
+      }))
+      localStorage.setItem(
+        keys.player,
+        JSON.stringify({ version: 1, playerId, name: 'Captain Test' }),
+      )
+      localStorage.setItem(keys.mockDb, JSON.stringify({ version: 1, matches }))
+    },
+    {
+      count,
+      keys: { player: 'pirate-battle:player', mockDb: STORAGE_KEYS.mockDb },
+    },
+  )
+}
+
+test('match history pages through the player’s matches, newest first', async ({
+  page,
+}) => {
+  await seedHistory(page, 7)
+  await page.goto('/#/log/history')
+  await expect(
+    page.getByText('Captain Test · Your recent battles'),
+  ).toBeVisible()
+  await expect(rows(page)).toHaveCount(5)
+  await expect(pagerLabel(page)).toHaveText('Page 1 of 2')
+  // Score i was played at hour i: the newest (6) comes first.
+  const points = rows(page).locator('td:nth-child(2)')
+  await expect(points).toHaveText(['6', '5', '4', '3', '2'])
+
+  await page.getByRole('button', { name: 'Next page' }).click()
+  await expect(pagerLabel(page)).toHaveText('Page 2 of 2')
+  await expect(points).toHaveText(['1', '0'])
+  await expect(rows(page).first()).toContainText('Ship destroyed')
+})
+
+test.describe('when the history fails', () => {
+  test.use({ allowedConsoleErrors: [/Failed to load resource/] })
+
+  test('it shows an error with Retry, and the ranking still works', async ({
+    page,
+  }) => {
+    await page.goto('/?scenario=history-fail#/log/history')
+    await expect(page.getByRole('alert')).toContainText(
+      'Could not load the match history',
+      { timeout: 10_000 },
+    )
+    await page.getByRole('tab', { name: 'Ranking' }).click()
+    await expect(rows(page)).toHaveCount(5)
+  })
+})
