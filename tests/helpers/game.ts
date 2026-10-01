@@ -54,3 +54,11 @@ export const STEP_MS = 1000 / 60
 export function aliveProjectiles({ world }: TestStateSnapshot): Projectile[] {
   return world.projectiles.filter((projectile) => projectile.alive)
 }
+
+/** Starts a new match through the session, as "Play again" will. */
+export async function restart(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    if (!window.__pirate) throw new Error('Test hooks are not installed')
+    window.__pirate.restart()
+  })
+}
