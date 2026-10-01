@@ -3,11 +3,34 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './app/App'
 
-const root = document.getElementById('root')
-if (!root) throw new Error('#root element is missing from index.html')
+/**
+ * The mock API runs in every build (including production), so the worker
+ * must be active before React mounts and issues its first request.
+ */
+async function enableMocking(): Promise<void> {
+  const { worker } = await import('./mocks/browser')
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+    serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
+    quiet: import.meta.env.PROD,
+  })
+}
 
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+function render(): void {
+  const root = document.getElementById('root')
+  if (!root) throw new Error('#root element is missing from index.html')
+
+  createRoot(root).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}
+
+enableMocking()
+  .catch((error: unknown) => {
+    // e.g. service workers unavailable (insecure origin, private mode):
+    // the game still works, only API calls will fail.
+    console.warn('Mock API could not start', error)
+  })
+  .finally(render)
