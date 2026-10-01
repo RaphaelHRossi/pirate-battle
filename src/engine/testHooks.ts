@@ -6,6 +6,8 @@ export interface TestParams {
   testMode: boolean
   /** `?seed=`: number, or any text hashed into one. */
   seed: number | null
+  /** `?debug=1`: draw colliders and hull circles. */
+  debug: boolean
 }
 
 export interface TestStateSnapshot {
@@ -39,7 +41,11 @@ export function readTestParams(search: string): TestParams {
       ? Number(rawSeed) >>> 0
       : seedFromString(rawSeed)
   }
-  return { testMode: params.get('test') === '1', seed }
+  return {
+    testMode: params.get('test') === '1',
+    seed,
+    debug: params.get('debug') === '1',
+  }
 }
 
 /** Installs the API and returns a function that removes it again. */

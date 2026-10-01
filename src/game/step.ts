@@ -1,3 +1,4 @@
+import { resolveShipObstacles } from './systems/shipCollision'
 import { updatePlayerMovement } from './systems/playerMovement'
 import type { InputIntents, World } from './types'
 
@@ -13,4 +14,5 @@ export function step(
   world.tick += 1
   world.elapsedSeconds += dt
   updatePlayerMovement(world, input, dt)
+  resolveShipObstacles(world.player, world.map.colliders, world.config.arena)
 }

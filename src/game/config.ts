@@ -1,3 +1,5 @@
+import { deepFreeze, type DeepReadonly } from './immutable'
+
 /**
  * Every balancing value lives here. Systems read them from the frozen
  * snapshot stored on the World; they never hard-code numbers.
@@ -23,8 +25,12 @@ export interface ShipConfig {
   /** Forward speed in px/s. */
   speed: number
   turnSpeedDegPerSec: number
-  /** Radius of the circle used for collisions and arena bounds, in px. */
-  collisionRadius: number
+  /**
+   * The hull is modelled as two circles of this radius, centred
+   * `hullOffset` px ahead of and behind the ship's position.
+   */
+  hullRadius: number
+  hullOffset: number
 }
 
 export interface GameConfig {
@@ -64,7 +70,8 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     maxHp: 100,
     speed: 180,
     turnSpeedDegPerSec: 150,
-    collisionRadius: 30,
+    hullRadius: 24,
+    hullOffset: 24,
     frontGun: { damage: 20, speed: 600, ttlSeconds: 1.0, cooldownSeconds: 0.4 },
     broadside: {
       count: 3,
@@ -79,14 +86,16 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     maxHp: 40,
     speed: 150,
     turnSpeedDegPerSec: 120,
-    collisionRadius: 30,
+    hullRadius: 24,
+    hullOffset: 24,
     contactDamage: 25,
   },
   shooter: {
     maxHp: 60,
     speed: 110,
     turnSpeedDegPerSec: 90,
-    collisionRadius: 30,
+    hullRadius: 24,
+    hullOffset: 24,
     range: 450,
     stopDistance: 300,
     // Speed and ttl are not in the spec: 400 px/s for 1.25 s reaches 500 px,
@@ -106,18 +115,7 @@ export interface MatchOptions {
   spawnSeconds?: number
 }
 
-export type DeepReadonly<T> = {
-  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K]
-}
-
 export type FrozenGameConfig = DeepReadonly<GameConfig>
-
-function deepFreeze<T extends object>(value: T): DeepReadonly<T> {
-  for (const child of Object.values(value) as unknown[]) {
-    if (typeof child === 'object' && child !== null) deepFreeze(child)
-  }
-  return Object.freeze(value)
-}
 
 /**
  * Returns an immutable copy of the config for one match, so changing the

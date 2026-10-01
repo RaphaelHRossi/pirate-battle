@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { hullCircles } from '../../src/game/collision'
 import type { Ship } from '../../src/game/types'
 import { advance, getState, openGame } from '../helpers/game'
 import { expect, test } from '../helpers/test'
@@ -75,14 +76,18 @@ test('moving, turning and firing work at the same time', async ({ page }) => {
 test('the ship never leaves the arena', async ({ page }) => {
   const initial = await getState(page)
   const { width, height } = initial.world.config.arena
-  const r = initial.world.player.radius
+  const { hullRadius: r, hullOffset } = initial.world.player
+  const EPSILON = 1e-6
 
+  // Both hull circles must stay fully inside the arena at all times.
   const expectInside = async (): Promise<Ship> => {
     const { world } = await getState(page)
-    expect(world.player.x).toBeGreaterThanOrEqual(r)
-    expect(world.player.x).toBeLessThanOrEqual(width - r)
-    expect(world.player.y).toBeGreaterThanOrEqual(r)
-    expect(world.player.y).toBeLessThanOrEqual(height - r)
+    for (const circle of hullCircles(world.player)) {
+      expect(circle.x).toBeGreaterThanOrEqual(r - EPSILON)
+      expect(circle.x).toBeLessThanOrEqual(width - r + EPSILON)
+      expect(circle.y).toBeGreaterThanOrEqual(r - EPSILON)
+      expect(circle.y).toBeLessThanOrEqual(height - r + EPSILON)
+    }
     return world.player
   }
 
@@ -93,7 +98,8 @@ test('the ship never leaves the arena', async ({ page }) => {
     await expectInside()
   }
   await page.keyboard.up('ArrowUp')
-  expect((await expectInside()).y).toBe(r)
+  // Facing up, the bow circle touches the top edge.
+  expect((await expectInside()).y).toBeCloseTo(r + hullOffset, 6)
 
   // Turn a quarter to face right, then sail into the right edge.
   const quarterTurnMs =
@@ -108,6 +114,6 @@ test('the ship never leaves the arena', async ({ page }) => {
   }
   await page.keyboard.up('ArrowUp')
   const corner = await expectInside()
-  expect(corner.x).toBe(width - r)
-  expect(corner.y).toBe(r)
+  expect(corner.x).toBeCloseTo(width - r - hullOffset, 6)
+  expect(corner.y).toBeCloseTo(r + hullOffset, 6)
 })

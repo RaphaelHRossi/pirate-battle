@@ -91,7 +91,9 @@ export class GameSession {
       snapshotConfig(),
       this.params.seed ?? randomSeed(),
     )
-    const renderer = new GameRenderer(textures, world)
+    const renderer = new GameRenderer(textures, world, {
+      debug: this.params.debug,
+    })
     app.stage.addChild(renderer.root)
 
     const input = createInputState()
