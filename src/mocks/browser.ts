@@ -1,6 +1,4 @@
-import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
+import { handlers } from './handlers'
 
-export const worker = setupWorker(
-  http.get('/api/health', () => HttpResponse.json({ status: 'ok' })),
-)
+export const worker = setupWorker(...handlers)

@@ -8,6 +8,9 @@ import { App } from './app/App'
  * must be active before React mounts and issues its first request.
  */
 async function enableMocking(): Promise<void> {
+  const { initScenarioFromUrl } = await import('./mocks/scenarios')
+  // ?scenario= / ?netSeed= pick the simulated network before any request.
+  initScenarioFromUrl(window.location.search)
   const { worker } = await import('./mocks/browser')
   await worker.start({
     onUnhandledRequest: 'bypass',
