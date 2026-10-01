@@ -64,6 +64,8 @@ export class GameSession {
     })
     world.addChild(water, ship)
     app.stage.addChild(world)
+    // Deterministic "rendered" signal for e2e tests and debugging.
+    this.host.dataset.status = 'ready'
 
     const fit = (): void => {
       const width = Math.max(1, this.host.clientWidth)

@@ -27,3 +27,8 @@ dist-ssr
 CLAUDE.md
 CLAUDE.local.md
 .claude/
+
+# Playwright
+reports/
+test-results/
+playwright/.cache/

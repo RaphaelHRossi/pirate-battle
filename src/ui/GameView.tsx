@@ -14,6 +14,7 @@ export function GameView() {
     session.start().catch((cause: unknown) => {
       if (session.isDisposed) return
       console.error('Failed to start the game', cause)
+      host.dataset.status = 'error'
       setError('Failed to load the game. Please reload the page.')
     })
 
