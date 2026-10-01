@@ -5,6 +5,7 @@ import { MainMenu } from '../ui/MainMenu'
 import { OptionsScreen } from '../ui/OptionsScreen'
 import { ResultScreen } from '../ui/ResultScreen'
 import { RotateDevice } from '../ui/RotateDevice'
+import { RegistrationSync } from './RegistrationSync'
 import { navigate, parseRoute, useHash, type Route } from './router'
 
 function Screen({ route }: { route: Route }) {
@@ -38,6 +39,7 @@ export function App() {
     <>
       <Screen route={route ?? { name: 'menu' }} />
       <RotateDevice />
+      <RegistrationSync onMenu={(route?.name ?? 'menu') === 'menu'} />
     </>
   )
 }

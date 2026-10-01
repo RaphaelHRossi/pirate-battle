@@ -1,6 +1,8 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { createQueryClient } from './api/queryClient'
 import { App } from './app/App'
 
 /**
@@ -23,9 +25,13 @@ function render(): void {
   const root = document.getElementById('root')
   if (!root) throw new Error('#root element is missing from index.html')
 
+  // One cache for the whole app; it outlives every screen.
+  const queryClient = createQueryClient()
   createRoot(root).render(
     <StrictMode>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </StrictMode>,
   )
 }

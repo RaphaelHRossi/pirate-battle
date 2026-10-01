@@ -582,6 +582,25 @@ body,
   border-radius: 0 0 10px 10px;
 }
 
+/* --- Small text buttons, Network panel, registration ---------------------- */
+
+.link-button {
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: var(--gold-light);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.registration {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
 /* --- Overlays and dialogs ------------------------------------------------- */
 
 .overlay {

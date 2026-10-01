@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { outbox } from '../api/outbox'
+import { useRegistrationStatus, useSendMatch } from '../api/queries'
 import { navigate } from '../app/router'
 import { loadLastResult, type MatchResult } from '../storage/lastResult'
 import { formatTime } from './format'
@@ -7,6 +9,43 @@ import { MenuScreen } from './MenuScreen'
 const END_REASON_LABEL: Record<MatchResult['endReason'], string> = {
   timeUp: 'Time up',
   playerDestroyed: 'Ship destroyed',
+}
+
+const REGISTRATION_LABEL = {
+  saving: 'Saving…',
+  saved: 'Saved',
+  failed: 'Not saved',
+} as const
+
+/**
+ * Whether the server has this match yet. The record waits in the outbox
+ * until it has, so "Not saved" is never final: Retry sends it now, and it
+ * is also sent again on the next app start or visit to the main menu.
+ */
+function Registration({ matchId }: { matchId: string }) {
+  const status = useRegistrationStatus(matchId)
+  const send = useSendMatch()
+  return (
+    <span className="registration">
+      <span role="status" data-testid="result-registration">
+        {REGISTRATION_LABEL[status]}
+      </span>
+      {status === 'failed' && (
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => {
+            const record = outbox
+              .getSnapshot()
+              .find((pending) => pending.matchId === matchId)
+            if (record) send(record)
+          }}
+        >
+          Retry
+        </button>
+      )}
+    </span>
+  )
 }
 
 function Actions() {
@@ -79,9 +118,8 @@ export function ResultScreen() {
         </div>
         <div>
           <dt>Registration</dt>
-          {/* Placeholder until results are sent to the ranking API. */}
-          <dd data-testid="result-registration">
-            Not sent yet: online ranking coming soon
+          <dd>
+            <Registration matchId={result.matchId} />
           </dd>
         </div>
       </dl>

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { navigate } from '../app/router'
 import type { SessionOptions } from '../engine/GameSession'
 import { TouchControls } from '../input/TouchControls'
-import { saveLastResult } from '../storage/lastResult'
+import { recordCompletedMatch } from '../api/registration'
 import { loadOptions } from '../storage/options'
 import { Announcer } from './Announcer'
 import { Hud } from './Hud'
@@ -12,12 +12,13 @@ import { useGameSession } from './useGameSession'
 
 /**
  * Every match reads the saved options when it starts, and a completed
- * match saves its result the moment it ends. Nothing else is saved: an
- * abandoned match (refresh, Back, Main Menu) leaves no trace.
+ * match saves its result and queues its record in the outbox the moment
+ * it ends. Nothing else is saved: an abandoned match (refresh, Back, Main
+ * Menu) leaves no trace.
  */
 const SESSION_OPTIONS: SessionOptions = {
   matchOptions: loadOptions,
-  onMatchEnd: saveLastResult,
+  onMatchEnd: recordCompletedMatch,
 }
 
 /**
