@@ -5,6 +5,12 @@ export interface Vec2 {
 
 const TAU = Math.PI * 2
 
+/**
+ * Tolerance for timers counted down in 1/60 s steps: 0.4 − 24 × (1/60) is
+ * not exactly 0 in floating point, and must still count as elapsed.
+ */
+export const TIME_EPSILON = 1e-9
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }

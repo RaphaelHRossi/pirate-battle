@@ -45,6 +45,17 @@ export interface GameConfig {
     maxAlive: number
     minDistanceFromPlayer: number
   }
+  projectiles: {
+    /** Pre-allocated projectile slots per match. */
+    poolSize: number
+    /** Collision radius of a cannonball, in px. */
+    radius: number
+  }
+  effects: {
+    /** Pre-allocated muzzle-flash slots per match. */
+    poolSize: number
+    muzzleFlashSeconds: number
+  }
   player: ShipConfig & { frontGun: GunConfig; broadside: BroadsideConfig }
   chaser: ShipConfig & { contactDamage: number }
   shooter: ShipConfig & {
@@ -66,6 +77,10 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     maxAlive: 12,
     minDistanceFromPlayer: 500,
   },
+  // Not in the spec: worst case is ~25 balls alive at once (player plus 12
+  // shooters), so 96 slots never run out. 5 px matches the 10 px sprite.
+  projectiles: { poolSize: 96, radius: 5 },
+  effects: { poolSize: 32, muzzleFlashSeconds: 0.12 },
   player: {
     maxHp: 100,
     speed: 180,

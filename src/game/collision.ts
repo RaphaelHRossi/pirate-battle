@@ -22,6 +22,13 @@ export function hullCircle(ship: Readonly<Ship>, side: HullSide): Circle {
   }
 }
 
+export function circlesOverlap(a: Circle, b: Circle): boolean {
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  const reach = a.r + b.r
+  return dx * dx + dy * dy < reach * reach
+}
+
 /** Bow and stern circles. */
 export function hullCircles(ship: Readonly<Ship>): [Circle, Circle] {
   return [hullCircle(ship, 1), hullCircle(ship, -1)]

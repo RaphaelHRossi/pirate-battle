@@ -29,6 +29,44 @@ export interface Ship {
   hullOffset: number
 }
 
+/** Seconds until each weapon can fire again; 0 means ready. */
+export interface WeaponCooldowns {
+  front: number
+  left: number
+  right: number
+}
+
+export interface PlayerShip extends Ship {
+  cooldowns: WeaponCooldowns
+}
+
+export type ProjectileOwner = 'player' | 'enemy'
+
+/** A pooled cannonball. Dead slots (`alive: false`) are reused. */
+export interface Projectile {
+  /** Unique per shot: a reused slot gets a new id. */
+  id: number
+  alive: boolean
+  owner: ProjectileOwner
+  x: number
+  y: number
+  vx: number
+  vy: number
+  damage: number
+  /** Seconds of flight left. */
+  ttl: number
+}
+
+/** A pooled, purely visual flash at a gun's muzzle; lives in game time. */
+export interface MuzzleFlash {
+  alive: boolean
+  x: number
+  y: number
+  /** Direction the shot left in. */
+  heading: number
+  ttl: number
+}
+
 export interface World {
   readonly config: FrozenGameConfig
   readonly map: FrozenGameMap
@@ -38,5 +76,7 @@ export interface World {
   /** Simulated time in seconds (tick × step), never wall-clock time. */
   elapsedSeconds: number
   nextEntityId: number
-  player: Ship
+  player: PlayerShip
+  projectiles: Projectile[]
+  muzzleFlashes: MuzzleFlash[]
 }

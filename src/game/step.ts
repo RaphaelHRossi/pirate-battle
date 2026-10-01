@@ -1,5 +1,8 @@
-import { resolveShipObstacles } from './systems/shipCollision'
+import { updateEffects } from './systems/effects'
 import { updatePlayerMovement } from './systems/playerMovement'
+import { updateProjectiles } from './systems/projectiles'
+import { resolveShipObstacles } from './systems/shipCollision'
+import { updatePlayerWeapons } from './systems/weapons'
 import type { InputIntents, World } from './types'
 
 /**
@@ -15,4 +18,8 @@ export function step(
   world.elapsedSeconds += dt
   updatePlayerMovement(world, input, dt)
   resolveShipObstacles(world.player, world.map.colliders, world.config.arena)
+  // Fire from the resolved position, then fly everything (new shots included).
+  updatePlayerWeapons(world, input, dt)
+  updateProjectiles(world, dt)
+  updateEffects(world, dt)
 }
