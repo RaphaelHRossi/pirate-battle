@@ -20,6 +20,11 @@ export interface GameSnapshot {
   /** Whole seconds left, rounded up: 119.2 s shows as 120. */
   readonly secondsLeft: number
   readonly endReason: EndReason | null
+  /**
+   * The match has ended and its final moments have played out: time to
+   * show the result screen.
+   */
+  readonly resultReady: boolean
 }
 
 export const INITIAL_SNAPSHOT: GameSnapshot = Object.freeze({
@@ -31,6 +36,7 @@ export const INITIAL_SNAPSHOT: GameSnapshot = Object.freeze({
   score: 0,
   secondsLeft: 0,
   endReason: null,
+  resultReady: false,
 })
 
 export function sameSnapshot(a: GameSnapshot, b: GameSnapshot): boolean {
@@ -42,6 +48,7 @@ export function sameSnapshot(a: GameSnapshot, b: GameSnapshot): boolean {
     a.maxHp === b.maxHp &&
     a.score === b.score &&
     a.secondsLeft === b.secondsLeft &&
-    a.endReason === b.endReason
+    a.endReason === b.endReason &&
+    a.resultReady === b.resultReady
   )
 }

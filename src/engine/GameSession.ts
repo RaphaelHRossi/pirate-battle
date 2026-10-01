@@ -1,16 +1,24 @@
 import { Application } from 'pixi.js'
-import { snapshotConfig } from '../game/config'
+import {
+  DEFAULT_MATCH_OPTIONS,
+  snapshotConfig,
+  type MatchOptions,
+} from '../game/config'
 import { applyFixture } from '../game/fixtures'
 import { TIME_EPSILON } from '../game/math'
 import { step } from '../game/step'
 import type { World } from '../game/types'
 import { createWorld } from '../game/world'
-import { clearInput, createInputState } from '../input/InputState'
-import { attachKeyboard, type KeyboardControls } from '../input/keyboard'
+import { createInputState } from '../input/InputState'
+import { createIntentTracker, type Intent } from '../input/intents'
+import { attachKeyboard } from '../input/keyboard'
+import { PORTRAIT_TOUCH_QUERY } from '../input/orientation'
 import { loadGameAssets, type GameTextures } from '../render/assets'
 import { MAX_RESOLUTION } from '../render/constants'
 import { GameRenderer } from '../render/GameRenderer'
+import type { MatchResult } from '../storage/lastResult'
 import { FixedStepLoop } from './loop'
+import { createMatchResult } from './matchResult'
 import {
   INITIAL_SNAPSHOT,
   sameSnapshot,
@@ -23,6 +31,20 @@ import { installTestHooks, readTestParams, type TestParams } from './testHooks'
 interface Match {
   world: World
   renderer: GameRenderer
+  /** Set once, on the step the match ends. */
+  result: MatchResult | null
+  /** Simulated seconds since the match ended. */
+  endedSeconds: number
+}
+
+export interface SessionOptions {
+  /** Read at the start of every match (each match uses its own snapshot). */
+  matchOptions?: () => MatchOptions
+  /**
+   * Called once per completed match, on the step it ends. A match that is
+   * abandoned (session destroyed while running) never calls it.
+   */
+  onMatchEnd?: (result: MatchResult) => void
 }
 
 function randomSeed(): number {
@@ -41,7 +63,10 @@ export class GameSession {
   private readonly abort = new AbortController()
   private readonly host: HTMLElement
   private readonly params: TestParams
+  private readonly options: SessionOptions
   private readonly input = createInputState()
+  /** Keyboard and touch presses, merged into `input`. */
+  private readonly intents = createIntentTracker(this.input)
   private readonly loop: FixedStepLoop
   private readonly listeners = new Set<() => void>()
   private snapshot: GameSnapshot = INITIAL_SNAPSHOT
@@ -58,18 +83,24 @@ export class GameSession {
   private frameId: number | null = null
   /** Lives while gameplay listeners are attached; aborted on pause. */
   private gameplay: AbortController | null = null
-  private keyboard: KeyboardControls | null = null
   private uninstallTestHooks: (() => void) | null = null
 
-  constructor(host: HTMLElement, search: string = window.location.search) {
+  constructor(
+    host: HTMLElement,
+    options: SessionOptions = {},
+    search: string = window.location.search,
+  ) {
     this.host = host
+    this.options = options
     this.params = readTestParams(search)
     this.clockPaused = this.params.testMode && this.params.manualClock
     this.loop = new FixedStepLoop(
       (dt) => {
-        if (!this.match) return
-        step(this.match.world, this.input, dt)
-        this.keyboard?.afterStep()
+        const { match } = this
+        if (!match) return
+        step(match.world, this.input, dt)
+        this.intents.afterStep()
+        if (match.world.match.status === 'ended') this.afterEndedStep(match, dt)
         this.publish()
       },
       () => {
@@ -123,10 +154,18 @@ export class GameSession {
         ? Math.ceil(world.match.secondsLeft - TIME_EPSILON)
         : 0,
       endReason: world?.match.endReason ?? null,
+      resultReady: this.isResultReady(),
     }
     if (sameSnapshot(next, this.snapshot)) return
     this.snapshot = Object.freeze(next)
     for (const listener of this.listeners) listener()
+  }
+
+  private isResultReady(): boolean {
+    const { match } = this
+    if (!match?.result) return false
+    const delay = match.world.config.match.resultDelaySeconds
+    return match.endedSeconds >= delay - TIME_EPSILON
   }
 
   private currentStatus(): SessionStatus {
@@ -242,8 +281,9 @@ export class GameSession {
     textures: GameTextures,
     { initial }: { initial: boolean },
   ): Match {
+    const options = this.options.matchOptions?.() ?? DEFAULT_MATCH_OPTIONS
     const world = createWorld(
-      snapshotConfig(),
+      snapshotConfig(options),
       this.params.seed ?? randomSeed(),
     )
     if (this.params.testMode) {
@@ -257,7 +297,21 @@ export class GameSession {
     })
     renderer.layout(this.screen.width, this.screen.height)
     app.stage.addChild(renderer.root)
-    return { world, renderer }
+    return { world, renderer, result: null, endedSeconds: 0 }
+  }
+
+  /**
+   * The match is over: record its result once, stop listening to game
+   * controls, and count the time the final moments have been shown.
+   */
+  private afterEndedStep(match: Match, dt: number): void {
+    if (match.result) {
+      match.endedSeconds += dt
+      return
+    }
+    match.result = createMatchResult(match.world)
+    this.endGameplay()
+    this.options.onMatchEnd?.(match.result)
   }
 
   /**
@@ -269,10 +323,11 @@ export class GameSession {
     if (!app || !textures || this.disposed) return
     this.match?.renderer.destroy()
     this.match = this.createMatch(app, textures, { initial: false })
-    clearInput(this.input)
+    this.endGameplay()
+    this.paused = false
     this.loop.resetClock()
-    if (this.paused) this.resume()
-    else this.render()
+    this.beginGameplay()
+    this.render()
     this.publish()
   }
 
@@ -316,14 +371,16 @@ export class GameSession {
 
   /**
    * Attaches everything that only exists while the match is being played:
-   * game keys, and the auto-pause on losing focus or hiding the tab.
+   * game keys, touch input, and the auto-pause on losing focus, hiding the
+   * tab or turning a phone to portrait.
    */
   private beginGameplay(): void {
+    if (this.gameplay) return
     const gameplay = new AbortController()
     this.gameplay = gameplay
     const signal = AbortSignal.any([this.abort.signal, gameplay.signal])
-    this.keyboard = attachKeyboard(
-      this.input,
+    attachKeyboard(
+      this.intents,
       {
         onPause: () => {
           this.pause()
@@ -345,7 +402,34 @@ export class GameSession {
       },
       { signal },
     )
+    const portrait = window.matchMedia(PORTRAIT_TOUCH_QUERY)
+    portrait.addEventListener(
+      'change',
+      () => {
+        if (portrait.matches) this.pause()
+      },
+      { signal },
+    )
     this.startClock()
+    // Opened (or resumed) while held in portrait: stay paused.
+    if (portrait.matches) this.pause()
+  }
+
+  /** Detaches the gameplay listeners and lets go of every held control. */
+  private endGameplay(): void {
+    this.gameplay?.abort()
+    this.gameplay = null
+    this.intents.releaseAll()
+  }
+
+  /** A touch control went down; ignored unless the match is being played. */
+  pressTouch(pointerId: number, intent: Intent): void {
+    if (!this.gameplay) return
+    this.intents.press(`pointer:${String(pointerId)}`, intent)
+  }
+
+  releaseTouch(pointerId: number): void {
+    this.intents.release(`pointer:${String(pointerId)}`)
   }
 
   /**
@@ -357,10 +441,7 @@ export class GameSession {
     if (this.match.world.match.status === 'ended') return
     this.paused = true
     this.stopClock()
-    this.gameplay?.abort()
-    this.gameplay = null
-    this.keyboard = null
-    clearInput(this.input)
+    this.endGameplay()
     this.publish()
   }
 
@@ -369,7 +450,7 @@ export class GameSession {
     this.paused = false
     // Start from a fresh clock and no held keys: the paused time must not
     // be simulated, and nothing pressed before the pause carries over.
-    clearInput(this.input)
+    this.intents.releaseAll()
     this.loop.resetClock()
     this.beginGameplay()
     this.publish()
