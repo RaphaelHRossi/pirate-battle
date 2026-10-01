@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js'
 import { snapshotConfig } from '../game/config'
+import { applyFixture } from '../game/fixtures'
 import { step } from '../game/step'
 import type { InputIntents, World } from '../game/types'
 import { createWorld } from '../game/world'
@@ -91,6 +92,9 @@ export class GameSession {
       snapshotConfig(),
       this.params.seed ?? randomSeed(),
     )
+    if (this.params.testMode && this.params.fixture) {
+      applyFixture(world, this.params.fixture)
+    }
     const renderer = new GameRenderer(textures, world, {
       debug: this.params.debug,
     })

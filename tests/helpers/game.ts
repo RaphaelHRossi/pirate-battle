@@ -3,14 +3,16 @@ import type { TestStateSnapshot } from '../../src/engine/testHooks'
 import { expect } from './test'
 
 /**
- * Opens the game in test mode with a fixed seed and takes control of the
- * clock, so only `advance()` moves the simulation.
+ * Opens the game in test mode with a fixed seed (and optional fixture) and
+ * takes control of the clock, so only `advance()` moves the simulation.
  */
 export async function openGame(
   page: Page,
-  { seed = 1 }: { seed?: number } = {},
+  { seed = 1, fixture }: { seed?: number; fixture?: string } = {},
 ): Promise<void> {
-  await page.goto(`/?test=1&seed=${String(seed)}`)
+  const params = new URLSearchParams({ test: '1', seed: String(seed) })
+  if (fixture) params.set('fixture', fixture)
+  await page.goto(`/?${params.toString()}`)
   await expect(page.locator('.game-host')).toHaveAttribute(
     'data-status',
     'ready',

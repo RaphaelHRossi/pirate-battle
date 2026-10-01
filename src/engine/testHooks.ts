@@ -6,6 +6,8 @@ export interface TestParams {
   testMode: boolean
   /** `?seed=`: number, or any text hashed into one. */
   seed: number | null
+  /** `?fixture=`: named start state (test mode only). */
+  fixture: string | null
   /** `?debug=1`: draw colliders and hull circles. */
   debug: boolean
 }
@@ -44,6 +46,7 @@ export function readTestParams(search: string): TestParams {
   return {
     testMode: params.get('test') === '1',
     seed,
+    fixture: params.get('fixture') || null,
     debug: params.get('debug') === '1',
   }
 }
