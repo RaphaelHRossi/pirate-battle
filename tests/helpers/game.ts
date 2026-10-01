@@ -24,7 +24,7 @@ export async function openGame(
   })
   if (fixture) params.set('fixture', fixture)
   if (!spawn) params.set('spawn', 'off')
-  await page.goto(`/?${params.toString()}`)
+  await page.goto(`/?${params.toString()}#/play`)
   await expect(page.locator('.game-host')).toHaveAttribute(
     'data-status',
     'ready',
@@ -69,4 +69,26 @@ export async function resumeClock(page: Page): Promise<void> {
     if (!window.__pirate) throw new Error('Test hooks are not installed')
     window.__pirate.resumeClock()
   })
+}
+
+/** localStorage keys written by the app (see src/storage). */
+export const STORAGE_KEYS = {
+  options: 'pirate-battle:options',
+  lastResult: 'pirate-battle:last-result',
+} as const
+
+export function readStorage(page: Page, key: string): Promise<string | null> {
+  return page.evaluate((name) => window.localStorage.getItem(name), key)
+}
+
+/**
+ * Plays the match out by running down the clock, then waits through the
+ * end-of-match delay until the result screen opens.
+ */
+export async function finishMatchByTime(page: Page): Promise<void> {
+  const { config } = (await getState(page)).world
+  await advance(page, config.match.durationSeconds * 1000)
+  expect((await getState(page)).world.match.status).toBe('ended')
+  await advance(page, config.match.resultDelaySeconds * 1000)
+  await expect(page).toHaveURL(/#\/result$/)
 }

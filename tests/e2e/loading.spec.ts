@@ -1,6 +1,6 @@
 import { expect, test } from '../helpers/test'
 
-const GAME_URL = '/?test=1&clock=manual&spawn=off'
+const GAME_URL = '/?test=1&clock=manual&spawn=off#/play'
 const FAILING_ASSET = '**/assets/png/default/ships/ship_2.png'
 
 // Routed on the context, not the page: the page is controlled by MSW's

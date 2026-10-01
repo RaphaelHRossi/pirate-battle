@@ -61,9 +61,10 @@ test('the match ends when the player is destroyed, and then nothing moves', asyn
   expect(state.world.player.hp).toBe(0)
   expect(state.world.match.secondsLeft).toBeGreaterThan(0)
 
-  // Several spawn intervals later: no movement, shots, damage, spawns or score.
-  const intervalMs = state.world.config.spawn.intervalSeconds * 1000
-  await tryEverything(page, intervalMs * 4)
+  // No movement, shots, damage, spawns or score. The spawn timer is part
+  // of the frozen state, so a spawner still running would show at once.
+  // (Kept within the end-of-match delay, before the result screen opens.)
+  await tryEverything(page, 1000)
   expect(frozenPart(await getState(page))).toEqual(frozenPart(state))
 })
 
@@ -72,11 +73,14 @@ test('restart starts a fresh match without reloading textures', async ({
 }) => {
   await openGame(page, { spawn: true, seed: 7 })
   await page.keyboard.down('Space')
-  await advance(page, 20_000)
+  // Two spawns in, well before this seed sinks the ship (which would end
+  // the match and move on to the result screen).
+  await advance(page, 7_000)
   await page.keyboard.up('Space')
   const played = await getState(page)
   expect(played.world.tick).toBeGreaterThan(0)
   expect(played.world.spawn.spawned).toBeGreaterThan(0)
+  expect(played.world.match.status).toBe('running')
 
   const imageRequests: string[] = []
   page.on('request', (request) => {

@@ -1,10 +1,16 @@
 import { expect, test } from '../helpers/test'
 
-test('app boots, renders the game canvas and serves the mock API', async ({
+test('app boots to the menu, Play renders the game canvas, and the mock API answers', async ({
   page,
 }) => {
   await page.goto('/')
+  await expect(
+    page.getByRole('heading', { name: 'Pirate Battle' }),
+  ).toBeVisible()
+  await expect(page.locator('canvas')).toHaveCount(0)
 
+  await page.getByRole('button', { name: 'Play' }).click()
+  await expect(page).toHaveURL(/#\/play$/)
   await expect(page.locator('.game-host')).toHaveAttribute(
     'data-status',
     'ready',
