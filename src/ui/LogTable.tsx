@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import type { Page } from '../api/contracts'
 import { RoundButton } from './RoundButton'
 
@@ -40,6 +40,8 @@ export function LogTable<T>({
 }: LogTableProps<T>) {
   const { data, isPending, isError, isFetching, isPlaceholderData, refetch } =
     query
+  const previousRef = useRef<HTMLButtonElement>(null)
+  const nextRef = useRef<HTMLButtonElement>(null)
 
   if (isPending) {
     return (
@@ -108,22 +110,27 @@ export function LogTable<T>({
       </table>
       <nav className="pager" aria-label={`${caption} pages`}>
         <RoundButton
+          ref={previousRef}
           icon="controls/icon_turn_left"
           label="Previous page"
           disabled={page <= 1}
           onClick={() => {
             onPage(page - 1)
+            // On the first page this button is disabled: keep focus nearby.
+            if (page - 1 <= 1) nextRef.current?.focus()
           }}
         />
         <p className="pager-label" data-testid="pager-label">
           Page {page} of {data.totalPages}
         </p>
         <RoundButton
+          ref={nextRef}
           icon="controls/icon_turn_right"
           label="Next page"
           disabled={page >= data.totalPages}
           onClick={() => {
             onPage(page + 1)
+            if (page + 1 >= data.totalPages) previousRef.current?.focus()
           }}
         />
       </nav>

@@ -21,15 +21,23 @@ interface PauseDialogProps {
 export function PauseDialog({ open, onResume, onMainMenu }: PauseDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const resumeRef = useRef<HTMLButtonElement>(null)
+  /** Where focus was when the dialog opened (e.g. the HUD Pause button). */
+  const returnFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
     if (open && !dialog.open) {
+      const active = document.activeElement
+      returnFocusRef.current = active instanceof HTMLElement ? active : null
       dialog.showModal()
       resumeRef.current?.focus()
     } else if (!open && dialog.open) {
       dialog.close()
+      // Back to where the player was, if that control still exists.
+      const target = returnFocusRef.current
+      returnFocusRef.current = null
+      if (target?.isConnected) target.focus()
     }
   }, [open])
 

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { navigate } from '../app/router'
 import {
   clampOption,
@@ -40,8 +40,15 @@ function OptionField({ name, label, value, onChange }: OptionFieldProps) {
   // Step from what is typed if it is a number, else from the saved value.
   const typed = Number(draft)
   const base = draft.trim() !== '' && Number.isFinite(typed) ? typed : value
+  const decreaseRef = useRef<HTMLButtonElement>(null)
+  const increaseRef = useRef<HTMLButtonElement>(null)
   const bump = (direction: 1 | -1): void => {
-    set(clampOption(name, base + direction * step))
+    const next = clampOption(name, base + direction * step)
+    set(next)
+    // The button just pressed is about to be disabled at the limit, which
+    // would drop keyboard focus to <body>: move it to the other button.
+    if (direction === -1 && next <= min) increaseRef.current?.focus()
+    if (direction === 1 && next >= max) decreaseRef.current?.focus()
   }
 
   return (
@@ -49,6 +56,7 @@ function OptionField({ name, label, value, onChange }: OptionFieldProps) {
       <label htmlFor={inputId}>{label}</label>
       <div className="option-control">
         <RoundButton
+          ref={decreaseRef}
           icon="controls/icon_minus"
           label={`Decrease ${label.toLowerCase()}`}
           disabled={base <= min}
@@ -77,6 +85,7 @@ function OptionField({ name, label, value, onChange }: OptionFieldProps) {
           <span aria-hidden="true">s</span>
         </span>
         <RoundButton
+          ref={increaseRef}
           icon="controls/icon_plus"
           label={`Increase ${label.toLowerCase()}`}
           disabled={base >= max}

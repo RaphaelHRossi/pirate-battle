@@ -5,6 +5,8 @@
   --wood-dark: #5a3214;
   --gold: #f2b84b;
   --gold-light: #ffd98a;
+  /* Lightest tone of the panel_menu slate (sampled from the PNG). */
+  --panel-slate: #2a3b4b;
   --error: #ff9b8a;
   --focus: #ffd84d;
   /* HUD art is drawn at 1×; shrink it on small (landscape phone) screens. */
@@ -217,7 +219,12 @@ body,
   border-image-slice: var(--slice-top) var(--slice-right) var(--slice-bottom)
     var(--slice-left) fill;
   border-image-repeat: stretch;
-  background: none;
+  /*
+   * The slate under the text, behind the 9-slice fill and only inside the
+   * frame: invisible, but lets contrast checkers (axe) see the real
+   * background instead of an image they cannot measure.
+   */
+  background: var(--panel-slate) padding-box;
   color: var(--parchment);
   text-align: center;
   filter: drop-shadow(0 10px 18px rgb(0 0 0 / 45%));

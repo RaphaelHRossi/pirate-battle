@@ -1,3 +1,4 @@
+import type { Ref } from 'react'
 import { cssVars, uiImage } from './uiAssets'
 
 const ROUND_BUTTON_VARS = cssVars({
@@ -13,6 +14,7 @@ interface RoundButtonProps {
   label: string
   disabled?: boolean
   onClick: () => void
+  ref?: Ref<HTMLButtonElement>
 }
 
 /** The round control frame with an icon (pause, -/+). */
@@ -21,9 +23,11 @@ export function RoundButton({
   label,
   disabled,
   onClick,
+  ref,
 }: RoundButtonProps) {
   return (
     <button
+      ref={ref}
       type="button"
       className="round-button"
       aria-label={label}
