@@ -4,6 +4,7 @@ import type { World } from '../../game/types'
 
 const COLLIDER_COLOR = 0xff3b30
 const HULL_COLOR = 0xffd60a
+const PROJECTILE_COLOR = 0xff00ff
 const LINE_WIDTH = 2
 
 /** `?debug=1`: draws island colliders and ship hull circles over the game. */
@@ -21,5 +22,10 @@ export class DebugView {
       g.circle(circle.x, circle.y, circle.r)
     }
     g.stroke({ width: LINE_WIDTH, color: HULL_COLOR })
+    const { radius } = world.config.projectiles
+    for (const projectile of world.projectiles) {
+      if (projectile.alive) g.circle(projectile.x, projectile.y, radius)
+    }
+    g.stroke({ width: LINE_WIDTH, color: PROJECTILE_COLOR })
   }
 }

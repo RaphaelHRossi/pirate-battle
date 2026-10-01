@@ -2,7 +2,9 @@ import { Container, Sprite, TilingSprite } from 'pixi.js'
 import type { World } from '../game/types'
 import type { GameTextures } from './assets'
 import { DebugView } from './views/DebugView'
+import { EffectsView } from './views/EffectsView'
 import { createIslandsView } from './views/IslandsView'
+import { ProjectilesView } from './views/ProjectilesView'
 
 /**
  * The ship sprites are drawn with the bow pointing down (+y, heading π/2),
@@ -21,6 +23,8 @@ export class GameRenderer {
   private readonly arenaWidth: number
   private readonly arenaHeight: number
   private readonly player: Sprite
+  private readonly projectiles: ProjectilesView
+  private readonly effects: EffectsView
   private readonly debug: DebugView | null
 
   constructor(
@@ -36,7 +40,15 @@ export class GameRenderer {
     // Static: built once from the map, never updated per frame.
     const islands = createIslandsView(world.map, textures.tile)
     this.player = new Sprite({ texture: textures.shipPlayer, anchor: 0.5 })
-    this.root.addChild(water, islands, this.player)
+    this.projectiles = new ProjectilesView(textures.cannonBall, world)
+    this.effects = new EffectsView(textures.muzzleFlash, world)
+    this.root.addChild(
+      water,
+      islands,
+      this.player,
+      this.projectiles.container,
+      this.effects.container,
+    )
 
     this.debug = options.debug ? new DebugView() : null
     if (this.debug) this.root.addChild(this.debug.graphics)
@@ -60,6 +72,8 @@ export class GameRenderer {
     const { player } = world
     this.player.position.set(player.x, player.y)
     this.player.rotation = player.heading + SHIP_SPRITE_ROTATION_OFFSET
+    this.projectiles.sync(world)
+    this.effects.sync(world)
     this.debug?.sync(world)
   }
 }
