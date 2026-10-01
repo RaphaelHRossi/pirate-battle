@@ -5,7 +5,8 @@ const BASE_URL = `http://localhost:${String(PORT)}`
 const isCI = Boolean(process.env.CI)
 
 export default defineConfig({
-  testDir: 'tests/e2e',
+  // e2e/ (behaviour) and visual/ (screenshots); helpers/ has no specs.
+  testDir: 'tests',
   outputDir: 'reports/test-results',
   fullyParallel: true,
   // Each worker runs its own Chromium with a WebGL context; more than a
@@ -17,6 +18,19 @@ export default defineConfig({
     ['list'],
     ['html', { outputFolder: 'reports/playwright', open: 'never' }],
   ],
+  // Baselines live next to the visual specs, one per project and OS:
+  // fonts and anti-aliasing differ between platforms, so a Windows
+  // baseline is not compared against a Linux run.
+  snapshotPathTemplate:
+    '{testDir}/{testFileDir}/__screenshots__/{arg}-{projectName}-{platform}{ext}',
+  expect: {
+    toHaveScreenshot: {
+      // Up to 1% of pixels may differ (GPU/anti-aliasing noise).
+      maxDiffPixelRatio: 0.01,
+      animations: 'disabled',
+      caret: 'hide',
+    },
+  },
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
