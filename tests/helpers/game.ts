@@ -62,3 +62,11 @@ export async function restart(page: Page): Promise<void> {
     window.__pirate.restart()
   })
 }
+
+/** Lets real time drive the game again (the page opens with a manual clock). */
+export async function resumeClock(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    if (!window.__pirate) throw new Error('Test hooks are not installed')
+    window.__pirate.resumeClock()
+  })
+}
