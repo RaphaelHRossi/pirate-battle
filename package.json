@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "atlas": "node scripts/convert-starling-atlas.mjs"
   },
   "dependencies": {
     "pixi.js": "^8.21.0",
