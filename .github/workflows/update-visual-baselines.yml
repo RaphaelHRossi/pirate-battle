@@ -1,0 +1,57 @@
+# Generates the Linux screenshot baselines (tests/visual/__screenshots__/
+# *-linux.png) and commits them to main. Run it by hand from the Actions
+# tab after a UI change; see docs/TESTING.md.
+name: Update visual baselines
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-visual-baselines
+  cancel-in-progress: false
+
+jobs:
+  update-baselines:
+    # Baselines are committed to main only.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      # Must match the @playwright/test version in package-lock.json, so
+      # the browsers in the image are the ones the tests expect.
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      # checkout needs git to create a repository we can commit from;
+      # without it, it only downloads a snapshot of the files.
+      - name: Ensure git is available
+        run: command -v git || (apt-get update && apt-get install -y --no-install-recommends git)
+
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write the visual baselines
+        # Only the visual specs; existing baselines of other platforms are
+        # untouched because every file name carries its platform.
+        run: npx playwright test tests/visual --update-snapshots
+
+      - name: Commit the Linux baselines
+        run: |
+          # The workspace is owned by another user inside the container.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual/__screenshots__/*-linux.png
+          if git diff --cached --quiet; then
+            echo "Linux baselines are already up to date."
+            exit 0
+          fi
+          git commit -m "test: add Linux visual baselines"
+          git push origin HEAD:main
