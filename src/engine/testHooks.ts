@@ -10,6 +10,11 @@ export interface TestParams {
   fixture: string | null
   /** `?debug=1`: draw colliders and hull circles. */
   debug: boolean
+  /**
+   * `?clock=manual` (test mode only): start with the clock paused, so not a
+   * single real frame runs before the test takes control with `advance`.
+   */
+  manualClock: boolean
 }
 
 export interface TestStateSnapshot {
@@ -48,6 +53,7 @@ export function readTestParams(search: string): TestParams {
     seed,
     fixture: params.get('fixture') || null,
     debug: params.get('debug') === '1',
+    manualClock: params.get('clock') === 'manual',
   }
 }
 

@@ -53,6 +53,7 @@ export class GameSession {
   constructor(host: HTMLElement, search: string = window.location.search) {
     this.host = host
     this.params = readTestParams(search)
+    this.clockPaused = this.params.testMode && this.params.manualClock
   }
 
   get isDisposed(): boolean {

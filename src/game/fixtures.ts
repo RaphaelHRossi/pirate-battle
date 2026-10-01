@@ -1,4 +1,5 @@
 import { degToRad, wrapAngle } from './math'
+import { spawnProjectile } from './systems/weapons'
 import type { World } from './types'
 
 function placePlayer(
@@ -25,6 +26,18 @@ export const GAME_FIXTURES: Readonly<Record<string, (world: World) => void>> = {
   /** Facing west and 20° north, so it meets the same coast at an angle. */
   'island-glancing': (world) => {
     placePlayer(world, 720, 330, Math.PI + degToRad(20))
+  },
+  /** An enemy ball 150 px ahead of the player (at spawn), flying at its bow. */
+  'incoming-shot': (world) => {
+    const { x, y } = world.player
+    spawnProjectile(
+      world,
+      'enemy',
+      x,
+      y - 150,
+      Math.PI / 2,
+      world.config.shooter.gun,
+    )
   },
 }
 
