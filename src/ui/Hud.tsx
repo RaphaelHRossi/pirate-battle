@@ -1,6 +1,7 @@
 import type { GameSnapshot } from '../engine/snapshot'
 import { HUD_HEALTH_BAR } from '../render/uiLayout'
 import { formatTime } from './format'
+import { RoundButton } from './RoundButton'
 import { cssVars, uiImage } from './uiAssets'
 
 /** Same thresholds as the ship damage stages. */
@@ -80,20 +81,12 @@ export function Hud({ snapshot, onPause }: HudProps) {
             {formatTime(secondsLeft)}
           </time>
         </p>
-        <button
-          type="button"
-          className="round-button"
-          aria-label="Pause"
+        <RoundButton
+          icon="controls/icon_pause"
+          label="Pause"
           disabled={status !== 'running'}
           onClick={onPause}
-          style={cssVars({
-            '--normal': `url(${uiImage('controls/button_round_normal')})`,
-            '--hover': `url(${uiImage('controls/button_round_hover')})`,
-            '--pressed': `url(${uiImage('controls/button_round_pressed')})`,
-          })}
-        >
-          <img src={uiImage('controls/icon_pause')} alt="" />
-        </button>
+        />
       </div>
     </section>
   )

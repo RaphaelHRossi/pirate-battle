@@ -4,6 +4,8 @@
   --wood: #8a4f24;
   --wood-dark: #5a3214;
   --gold: #f2b84b;
+  --gold-light: #ffd98a;
+  --error: #ff9b8a;
   --focus: #ffd84d;
   /* HUD art is drawn at 1×; shrink it on small (landscape phone) screens. */
   --hud-scale: 1;
@@ -45,6 +47,8 @@ body,
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
+  /* A dark halo keeps the yellow ring visible on light art too. */
+  box-shadow: 0 0 0 6px rgb(0 0 0 / 70%);
 }
 
 /* --- Match screen ------------------------------------------------------ */
@@ -186,7 +190,399 @@ body,
   height: calc(32px * var(--hud-scale));
 }
 
-/* --- Overlays and dialogs ----------------------------------------------- */
+/* --- Panels: panel_menu as a 9-slice frame ------------------------------ */
+
+/*
+ * The slice values come from ui_sheet.json (`borders` of panel_menu) as
+ * --slice-* variables set inline (src/ui/panel.ts). The corners keep their
+ * shape, the edges stretch, and `fill` paints the slate centre behind the
+ * content, so one image frames panels of any size.
+ */
+.panel,
+.overlay-panel,
+.pause-dialog {
+  --frame-scale: 1.25;
+  box-sizing: border-box;
+  max-width: calc(100% - 32px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: 4px 20px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: calc(var(--slice-top) * var(--frame-scale) * 1px)
+    calc(var(--slice-right) * var(--frame-scale) * 1px)
+    calc(var(--slice-bottom) * var(--frame-scale) * 1px)
+    calc(var(--slice-left) * var(--frame-scale) * 1px);
+  border-image-source: url('/assets/png/default/ui/menu/panel_menu.png');
+  border-image-slice: var(--slice-top) var(--slice-right) var(--slice-bottom)
+    var(--slice-left) fill;
+  border-image-repeat: stretch;
+  background: none;
+  color: var(--parchment);
+  text-align: center;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 45%));
+}
+
+@media (max-height: 640px) {
+  .panel,
+  .overlay-panel,
+  .pause-dialog {
+    --frame-scale: 0.8;
+  }
+}
+
+.panel {
+  width: 560px;
+}
+
+.panel--wide {
+  width: 720px;
+}
+
+.panel-heading,
+.overlay-panel h2,
+.pause-dialog h2 {
+  margin: 8px 0 12px;
+  color: var(--gold-light);
+  font-size: clamp(1.6rem, 4vh, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 rgb(0 0 0 / 45%);
+}
+
+/* Headings take focus on navigation only to move the reading position. */
+.panel-heading:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.title-image {
+  display: block;
+  width: min(384px, 100%);
+  height: auto;
+  margin: 0 auto;
+}
+
+.tagline {
+  margin: 0 0 16px;
+  color: var(--parchment);
+  font-size: 0.85rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.panel-note {
+  min-height: 1.3em;
+  margin: 12px 0;
+  font-size: 0.95rem;
+}
+
+/* Landscape phones: everything tighter so a panel fits ~360 px of height. */
+@media (max-height: 640px) {
+  .title-image {
+    width: min(240px, 100%);
+  }
+
+  .tagline {
+    margin-bottom: 6px;
+    font-size: 0.7rem;
+  }
+
+  .panel-heading,
+  .overlay-panel h2,
+  .pause-dialog h2 {
+    margin: 0 0 6px;
+    font-size: 1.4rem;
+  }
+
+  .panel-note,
+  .controls-guide table,
+  .option-hint,
+  .option-error {
+    font-size: 0.75rem;
+  }
+
+  .panel-note {
+    margin: 6px 0;
+  }
+
+  .option-control {
+    margin-top: 2px;
+  }
+
+  .option-value {
+    font-size: 1.1rem;
+  }
+
+  .result-score {
+    font-size: 2.4rem;
+  }
+
+  .menu-actions,
+  .dialog-actions {
+    flex-flow: row wrap;
+    justify-content: center;
+  }
+}
+
+/* --- Menu screens --------------------------------------------------------- */
+
+.menu-screen {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 12px 0;
+  /* Dimmed so the panel stands out from the busy scene. */
+  background:
+    linear-gradient(rgb(4 24 40 / 35%), rgb(4 24 40 / 35%)),
+    url('/assets/ui_scene_background.png') center / cover no-repeat,
+    #0a1f2e;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.menu-actions--row {
+  flex-flow: row wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.controls-guide h2 {
+  margin: 12px 0 6px;
+  color: var(--gold-light);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.controls-guide table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.controls-guide th,
+.controls-guide td {
+  padding: 3px 6px;
+  border-bottom: 1px solid rgb(246 231 200 / 20%);
+}
+
+.controls-guide thead th {
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.controls-guide tbody th {
+  font-weight: 400;
+}
+
+/* --- Menu buttons (button_primary / button_secondary) -------------------- */
+
+.menu-button {
+  --button-scale: 1;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: calc(256px * var(--button-scale));
+  height: calc(88px * var(--button-scale));
+  /* label_rect from ui_sheet.json: keep text inside the wooden end caps. */
+  padding: 0 calc(34px * var(--button-scale));
+  border: 0;
+  border-radius: calc(28px * var(--button-scale));
+  background: url('/assets/png/default/ui/menu/button_primary_normal.png')
+    center / 100% 100% no-repeat;
+  color: var(--ink);
+  font: inherit;
+  font-size: calc(1.35rem * var(--button-scale));
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.menu-button:hover:not(:disabled) {
+  background-image: url('/assets/png/default/ui/menu/button_primary_hover.png');
+}
+
+.menu-button:active:not(:disabled) {
+  background-image: url('/assets/png/default/ui/menu/button_primary_pressed.png');
+}
+
+.menu-button:disabled {
+  background-image: url('/assets/png/default/ui/menu/button_primary_disabled.png');
+  color: #5c5148;
+  cursor: not-allowed;
+}
+
+.menu-button--secondary {
+  --button-scale: 0.8;
+  background-image: url('/assets/png/default/ui/menu/button_secondary_normal.png');
+  color: var(--parchment);
+  font-size: 1rem;
+}
+
+/* No hover art for the secondary button: brighten the normal one. */
+.menu-button--secondary:hover:not(:disabled) {
+  background-image: url('/assets/png/default/ui/menu/button_secondary_normal.png');
+  filter: brightness(1.2);
+}
+
+.menu-button--secondary:active:not(:disabled) {
+  background-image: url('/assets/png/default/ui/menu/button_secondary_pressed.png');
+}
+
+@media (max-height: 640px) {
+  .menu-button {
+    --button-scale: 0.75;
+  }
+
+  .menu-button--secondary {
+    --button-scale: 0.65;
+  }
+}
+
+/* --- Options -------------------------------------------------------------- */
+
+.options-form {
+  display: grid;
+  gap: 8px;
+}
+
+.option-field label {
+  display: block;
+  font-weight: 700;
+}
+
+.option-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.option-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.option-value input {
+  box-sizing: border-box;
+  width: 4.5ch;
+  padding: 4px 6px;
+  border: 2px solid rgb(246 231 200 / 45%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 25%);
+  color: var(--parchment);
+  font: inherit;
+  text-align: center;
+}
+
+.option-value input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.option-hint {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.option-error {
+  min-height: 1.2em;
+  margin: 2px 0 0;
+  color: var(--error);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* --- Result --------------------------------------------------------------- */
+
+.result-score {
+  display: grid;
+  margin: 0;
+  color: var(--gold-light);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 3px 0 rgb(0 0 0 / 45%);
+}
+
+.result-score-label {
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.result-details {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+}
+
+.result-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgb(246 231 200 / 20%);
+}
+
+.result-details dt {
+  font-weight: 700;
+}
+
+.result-details dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* --- Captain's log tabs --------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border: 2px solid rgb(246 231 200 / 45%);
+  border-radius: 10px 10px 0 0;
+  background: rgb(0 0 0 / 25%);
+  color: var(--parchment);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab[aria-selected='true'] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.tab-panel {
+  min-height: 120px;
+  padding: 12px;
+  border: 2px solid rgb(246 231 200 / 25%);
+  border-radius: 0 0 10px 10px;
+}
+
+/* --- Overlays and dialogs ------------------------------------------------- */
 
 .overlay {
   position: absolute;
@@ -198,26 +594,13 @@ body,
 
 .overlay-panel,
 .pause-dialog {
-  max-width: min(90vw, 420px);
-  padding: 24px 28px;
-  border: 4px solid var(--wood);
-  border-radius: 16px;
-  background: var(--parchment);
-  color: var(--ink);
-  text-align: center;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
-}
-
-.overlay-panel h2,
-.pause-dialog h2 {
-  margin: 0 0 12px;
-  color: var(--wood-dark);
+  width: 460px;
 }
 
 .overlay-panel progress {
   width: 100%;
   height: 18px;
-  accent-color: var(--wood);
+  accent-color: var(--gold);
 }
 
 .pause-dialog::backdrop {
@@ -226,40 +609,15 @@ body,
 
 .dialog-actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
 }
 
 .dialog-note {
-  margin: 12px 0 0;
+  margin: 8px 0;
   font-size: 0.85rem;
-}
-
-.menu-button {
-  min-width: 140px;
-  padding: 12px 20px;
-  border: 3px solid var(--wood-dark);
-  border-radius: 12px;
-  background: #e9d3a6;
-  color: var(--ink);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.menu-button--primary {
-  background: var(--gold);
-}
-
-.menu-button:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-
-.menu-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .render-counter {

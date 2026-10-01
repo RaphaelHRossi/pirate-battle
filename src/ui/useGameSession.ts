@@ -4,7 +4,7 @@ import {
   useSyncExternalStore,
   type RefObject,
 } from 'react'
-import { GameSession } from '../engine/GameSession'
+import { GameSession, type SessionOptions } from '../engine/GameSession'
 import { INITIAL_SNAPSHOT, type GameSnapshot } from '../engine/snapshot'
 
 /**
@@ -73,17 +73,23 @@ export interface GameSessionControls {
  * The component re-renders only when the snapshot object changes, which
  * the session does only when a displayed value changes, never per frame.
  */
-export function useGameSession(hostRef: RefObject<HTMLDivElement | null>): {
+export function useGameSession(
+  hostRef: RefObject<HTMLDivElement | null>,
+  options: SessionOptions,
+): {
   snapshot: GameSnapshot
   controls: GameSessionControls
 } {
   const [handle] = useState(() => new SessionHandle())
+  // The session lives for the whole mount: it keeps the options it was
+  // created with (pass module-level functions, not inline closures).
+  const [sessionOptions] = useState(options)
 
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
     // One session per effect run: Strict Mode's second mount gets a fresh one.
-    const session = new GameSession(host)
+    const session = new GameSession(host, sessionOptions)
     handle.connect(session)
     session.start().catch((cause: unknown) => {
       // start() handles its expected failures itself (snapshot 'error').
@@ -93,7 +99,7 @@ export function useGameSession(hostRef: RefObject<HTMLDivElement | null>): {
       handle.disconnect(session)
       session.destroy()
     }
-  }, [handle, hostRef])
+  }, [handle, hostRef, sessionOptions])
 
   const snapshot = useSyncExternalStore(handle.subscribe, handle.getSnapshot)
   return { snapshot, controls: handle }

@@ -4,10 +4,13 @@ import {
   type KeyboardEvent,
   type SyntheticEvent,
 } from 'react'
+import { panelSliceVars } from './panel'
 
 interface PauseDialogProps {
   open: boolean
   onResume: () => void
+  /** Leaves the match: it is abandoned and never recorded. */
+  onMainMenu: () => void
 }
 
 /**
@@ -15,7 +18,7 @@ interface PauseDialogProps {
  * focus inside and gives Escape handling for free. Focus goes to Resume
  * when it opens; Escape resumes too, as the only other way out.
  */
-export function PauseDialog({ open, onResume }: PauseDialogProps) {
+export function PauseDialog({ open, onResume, onMainMenu }: PauseDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const resumeRef = useRef<HTMLButtonElement>(null)
 
@@ -50,12 +53,13 @@ export function PauseDialog({ open, onResume }: PauseDialogProps) {
     <dialog
       ref={dialogRef}
       className="pause-dialog"
+      style={panelSliceVars}
       aria-labelledby="pause-title"
       onKeyDown={onKeyDown}
       onCancel={onCancel}
     >
       <h2 id="pause-title">Paused</h2>
-      <p>The match is on hold. Nothing moves until you resume.</p>
+      <p>Ready when you are. Nothing moves until you resume.</p>
       <div className="dialog-actions">
         <button
           ref={resumeRef}
@@ -65,18 +69,17 @@ export function PauseDialog({ open, onResume }: PauseDialogProps) {
         >
           Resume
         </button>
-        {/* Placeholder until the main menu exists. */}
         <button
           type="button"
           className="menu-button"
-          disabled
-          aria-describedby="main-menu-soon"
+          aria-describedby="main-menu-note"
+          onClick={onMainMenu}
         >
           Main Menu
         </button>
       </div>
-      <p id="main-menu-soon" className="dialog-note">
-        The main menu is coming soon.
+      <p id="main-menu-note" className="dialog-note">
+        Leaving ends this match without recording it.
       </p>
     </dialog>
   )

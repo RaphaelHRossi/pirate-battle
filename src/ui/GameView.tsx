@@ -1,4 +1,8 @@
 import { useEffect, useRef } from 'react'
+import { navigate } from '../app/router'
+import type { SessionOptions } from '../engine/GameSession'
+import { saveLastResult } from '../storage/lastResult'
+import { loadOptions } from '../storage/options'
 import { Announcer } from './Announcer'
 import { Hud } from './Hud'
 import { LoadingScreen } from './LoadingScreen'
@@ -6,16 +10,27 @@ import { PauseDialog } from './PauseDialog'
 import { useGameSession } from './useGameSession'
 
 /**
+ * Every match reads the saved options when it starts, and a completed
+ * match saves its result the moment it ends. Nothing else is saved: an
+ * abandoned match (refresh, Back, Main Menu) leaves no trace.
+ */
+const SESSION_OPTIONS: SessionOptions = {
+  matchOptions: loadOptions,
+  onMatchEnd: saveLastResult,
+}
+
+/**
  * The match screen: the Pixi canvas host plus React overlays. The canvas
  * host has no React children, because Pixi appends its canvas there.
+ * Unmounting it (leaving #/play) destroys the session and its match.
  */
 export function GameView() {
   const hostRef = useRef<HTMLDivElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const badgeRef = useRef<HTMLSpanElement>(null)
   const renderCount = useRef(0)
-  const { snapshot, controls } = useGameSession(hostRef)
-  const { status } = snapshot
+  const { snapshot, controls } = useGameSession(hostRef, SESSION_OPTIONS)
+  const { status, resultReady } = snapshot
   const inMatch =
     status === 'running' || status === 'paused' || status === 'ended'
 
@@ -28,6 +43,16 @@ export function GameView() {
     rootRef.current?.setAttribute('data-render-count', count)
     if (badgeRef.current) badgeRef.current.textContent = `renders: ${count}`
   })
+
+  useEffect(() => {
+    document.title = 'Battle · Pirate Battle'
+  }, [])
+
+  // The result is already saved; once the end has played out, show it.
+  // Replace, so Back from the result does not start another match.
+  useEffect(() => {
+    if (resultReady) navigate({ name: 'result' }, { replace: true })
+  }, [resultReady])
 
   return (
     <div ref={rootRef} className="game-screen">
@@ -51,6 +76,9 @@ export function GameView() {
         open={status === 'paused'}
         onResume={() => {
           controls.resume()
+        }}
+        onMainMenu={() => {
+          navigate({ name: 'menu' })
         }}
       />
       <Announcer snapshot={snapshot} />

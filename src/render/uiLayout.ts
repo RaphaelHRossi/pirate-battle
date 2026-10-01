@@ -36,3 +36,10 @@ export const SHIP_HEALTH_BAR: BarLayout = {
   height: frames.enemy_health_frame.frame.h,
   fill: frames.enemy_health_frame.ui.layout.fill_rect,
 }
+
+/**
+ * 9-slice borders of the menu panel (panel_menu), in source pixels: the
+ * corners keep their size and the edges stretch, so one 384×480 image
+ * frames panels of any size (CSS border-image-slice).
+ */
+export const MENU_PANEL_BORDERS = frames.panel_menu.borders

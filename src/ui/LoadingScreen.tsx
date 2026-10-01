@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { GameSnapshot } from '../engine/snapshot'
+import { panelSliceVars } from './panel'
 
 interface LoadingScreenProps {
   snapshot: GameSnapshot
@@ -19,7 +20,7 @@ export function LoadingScreen({ snapshot, onRetry }: LoadingScreenProps) {
   if (failed) {
     return (
       <div className="overlay">
-        <div className="overlay-panel" role="alert">
+        <div className="overlay-panel" role="alert" style={panelSliceVars}>
           <h2>Could not load the game</h2>
           {snapshot.canRetry ? (
             <>
@@ -46,7 +47,7 @@ export function LoadingScreen({ snapshot, onRetry }: LoadingScreenProps) {
 
   return (
     <div className="overlay">
-      <div className="overlay-panel">
+      <div className="overlay-panel" style={panelSliceVars}>
         <h2 id="loading-title">Loading the fleet…</h2>
         <progress
           max={100}
