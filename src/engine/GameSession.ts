@@ -5,7 +5,11 @@ import { step } from '../game/step'
 import type { InputIntents, World } from '../game/types'
 import { createWorld } from '../game/world'
 import { clearInput, createInputState } from '../input/InputState'
-import { attachKeyboard, attachResumeKeys } from '../input/keyboard'
+import {
+  attachKeyboard,
+  attachResumeKeys,
+  type KeyboardControls,
+} from '../input/keyboard'
 import { loadGameAssets } from '../render/assets'
 import { MAX_RESOLUTION } from '../render/constants'
 import { GameRenderer } from '../render/GameRenderer'
@@ -41,6 +45,7 @@ export class GameSession {
   private frameId: number | null = null
   /** Lives while gameplay keys are attached; aborted on pause. */
   private gameplay: AbortController | null = null
+  private keyboard: KeyboardControls | null = null
   /** Lives while paused; aborted on resume. */
   private pauseScope: AbortController | null = null
   private uninstallTestHooks: (() => void) | null = null
@@ -107,6 +112,7 @@ export class GameSession {
     }
     const loop = new FixedStepLoop((dt) => {
       step(world, input, dt)
+      this.keyboard?.afterStep()
     }, render)
     this.match = { world, input, loop }
 
@@ -160,7 +166,7 @@ export class GameSession {
   private beginGameplay(match: Match): void {
     const gameplay = new AbortController()
     this.gameplay = gameplay
-    attachKeyboard(
+    this.keyboard = attachKeyboard(
       match.input,
       {
         onPause: () => {
@@ -180,6 +186,7 @@ export class GameSession {
     this.stopClock()
     this.gameplay?.abort()
     this.gameplay = null
+    this.keyboard = null
     clearInput(match.input)
 
     const pauseScope = new AbortController()

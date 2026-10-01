@@ -19,6 +19,11 @@ const KEY_BINDINGS: Readonly<Record<string, Intent>> = {
   KeyE: 'fireRight',
 }
 
+export interface KeyboardControls {
+  /** Call after every simulation step, to release latched taps. */
+  afterStep(): void
+}
+
 const PAUSE_CODES: ReadonlySet<string> = new Set(['KeyP', 'Escape'])
 
 /** Leave browser/OS shortcuts (Ctrl+R, Cmd+W, Alt+Tab...) alone. */
@@ -30,13 +35,20 @@ function hasModifier(event: KeyboardEvent): boolean {
  * Writes gameplay intents while the match is active. Every key is tracked
  * independently, so moving, turning and firing combine freely. All
  * listeners are removed when `signal` aborts.
+ *
+ * Taps are latched: a key pressed and released between two simulation
+ * steps keeps its intent on until `afterStep()`, so the game sees it once.
  */
 export function attachKeyboard(
   input: InputIntents,
   handlers: { onPause: () => void },
   signal: AbortSignal,
-): void {
+): KeyboardControls {
   const pressed = new Set<string>()
+  /** Intents switched on since the last step; no step has seen them yet. */
+  const unseen = new Set<Intent>()
+  /** Released before any step saw them; cleared after the next step. */
+  const deferredRelease = new Set<Intent>()
 
   // An intent stays on while any of its keys is held (e.g. W and ArrowUp).
   const refresh = (intent: Intent): void => {
@@ -45,6 +57,8 @@ export function attachKeyboard(
 
   const releaseAll = (): void => {
     pressed.clear()
+    unseen.clear()
+    deferredRelease.clear()
     clearInput(input)
   }
 
@@ -62,6 +76,7 @@ export function attachKeyboard(
       // Stops Space/arrows from scrolling the page.
       event.preventDefault()
       pressed.add(event.code)
+      if (!input[intent]) unseen.add(intent)
       input[intent] = true
     },
     { signal },
@@ -75,7 +90,8 @@ export function attachKeyboard(
       if (!intent) return
       event.preventDefault()
       pressed.delete(event.code)
-      refresh(intent)
+      if (unseen.has(intent)) deferredRelease.add(intent)
+      else refresh(intent)
     },
     { signal },
   )
@@ -83,6 +99,14 @@ export function attachKeyboard(
   // Keyup never arrives if focus leaves while a key is held.
   window.addEventListener('blur', releaseAll, { signal })
   signal.addEventListener('abort', releaseAll, { once: true })
+
+  return {
+    afterStep: () => {
+      unseen.clear()
+      for (const intent of deferredRelease) refresh(intent)
+      deferredRelease.clear()
+    },
+  }
 }
 
 /** While paused, only the pause keys are listened to, to resume. */
