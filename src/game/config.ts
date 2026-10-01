@@ -35,7 +35,14 @@ export interface ShipConfig {
 
 export interface GameConfig {
   arena: { width: number; height: number }
-  match: { durationSeconds: number }
+  match: {
+    durationSeconds: number
+    /**
+     * Simulated seconds the ended match stays on screen (the final
+     * explosion plays out) before the result screen opens.
+     */
+    resultDelaySeconds: number
+  }
   spawn: {
     intervalSeconds: number
     /** Probability (0..1) that a spawn is a Chaser; otherwise a Shooter. */
@@ -87,7 +94,8 @@ export interface GameConfig {
 
 export const DEFAULT_GAME_CONFIG: GameConfig = {
   arena: { width: 1920, height: 1080 },
-  match: { durationSeconds: 120 },
+  // resultDelaySeconds is not in the spec: long enough to see the ship sink.
+  match: { durationSeconds: 120, resultDelaySeconds: 2.5 },
   spawn: {
     intervalSeconds: 3,
     chaserChance: 0.6,
@@ -150,15 +158,50 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   },
 }
 
-/** Player-adjustable match options and their allowed ranges. */
+/**
+ * The two options the player can change on the Options screen, and their
+ * documented limits. A value is valid only if it lies within [min, max]
+ * and is a whole number of `step`s from `min`:
+ *
+ * - Game session time: 60–180 s in steps of 10 s (default 120 s).
+ * - Enemy spawn time: 1–10 s in steps of 0.5 s (default 3 s). Always
+ *   positive: at 1 s the 12-ship cap is reached in 12 s; above 10 s a
+ *   60 s match would see almost no enemies.
+ *
+ * The storage module validates saved values against these same limits,
+ * so a hand-edited localStorage can never feed the game an invalid match.
+ */
 export const MATCH_OPTION_LIMITS = {
   sessionSeconds: { min: 60, max: 180, step: 10 },
   spawnSeconds: { min: 1, max: 10, step: 0.5 },
 } as const
 
+export type MatchOptionName = keyof typeof MATCH_OPTION_LIMITS
+
 export interface MatchOptions {
-  sessionSeconds?: number
-  spawnSeconds?: number
+  sessionSeconds: number
+  spawnSeconds: number
+}
+
+export const DEFAULT_MATCH_OPTIONS: Readonly<MatchOptions> = Object.freeze({
+  sessionSeconds: DEFAULT_GAME_CONFIG.match.durationSeconds,
+  spawnSeconds: DEFAULT_GAME_CONFIG.spawn.intervalSeconds,
+})
+
+/** True if `value` is within the option's limits and on its step grid. */
+export function isValidOption(name: MatchOptionName, value: number): boolean {
+  const { min, max, step } = MATCH_OPTION_LIMITS[name]
+  if (!Number.isFinite(value) || value < min || value > max) return false
+  const steps = (value - min) / step
+  // Tolerate float noise such as 1.5 / 0.5 computed from user input.
+  return Math.abs(steps - Math.round(steps)) < 1e-9
+}
+
+/** Nearest valid value: clamped to the limits and snapped to the step. */
+export function clampOption(name: MatchOptionName, value: number): number {
+  const { min, max, step } = MATCH_OPTION_LIMITS[name]
+  const snapped = min + Math.round((value - min) / step) * step
+  return Math.min(max, Math.max(min, snapped))
 }
 
 export type FrozenGameConfig = DeepReadonly<GameConfig>
@@ -168,7 +211,7 @@ export type FrozenGameConfig = DeepReadonly<GameConfig>
  * options mid-match (or a bug in a system) can never alter its rules.
  */
 export function snapshotConfig(
-  options: MatchOptions = {},
+  options: Partial<MatchOptions> = {},
   base: GameConfig = DEFAULT_GAME_CONFIG,
 ): FrozenGameConfig {
   const config = structuredClone(base)
