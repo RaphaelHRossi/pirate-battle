@@ -29,6 +29,9 @@ CLAUDE.local.md
 .claude/
 
 # Playwright
-reports/
+# The HTML report (reports/playwright) is committed: it embeds the traces
+# of failed tests. Raw per-test output, traces of passing runs included, is
+# not.
+reports/test-results/
 test-results/
 playwright/.cache/
