@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { CaptainsLog } from '../ui/CaptainsLog'
 import { GameView } from '../ui/GameView'
 import { MainMenu } from '../ui/MainMenu'
+import { NetworkPanel } from '../ui/NetworkPanel'
 import { OptionsScreen } from '../ui/OptionsScreen'
 import { ResultScreen } from '../ui/ResultScreen'
 import { RotateDevice } from '../ui/RotateDevice'
@@ -22,6 +23,8 @@ function Screen({ route }: { route: Route }) {
       return <ResultScreen />
     case 'log':
       return <CaptainsLog tab={route.tab} />
+    case 'network':
+      return <NetworkPanel />
   }
 }
 

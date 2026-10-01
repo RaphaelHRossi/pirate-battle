@@ -730,10 +730,53 @@ body,
   cursor: pointer;
 }
 
+.menu-footer {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
 .registration {
   display: inline-flex;
   align-items: baseline;
   gap: 8px;
+}
+
+.scenario-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px 16px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(246 231 200 / 30%);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.scenario-list legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.scenario-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 8px;
+  align-items: center;
+}
+
+.scenario-option input {
+  accent-color: var(--gold);
+}
+
+.scenario-name {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scenario-description {
+  grid-column: 2;
+  font-size: 0.75rem;
+  opacity: 0.85;
 }
 
 /* --- Overlays and dialogs ------------------------------------------------- */

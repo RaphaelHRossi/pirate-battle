@@ -15,6 +15,7 @@ export type Route =
   | { name: 'play' }
   | { name: 'result' }
   | { name: 'log'; tab: LogTab }
+  | { name: 'network' }
 
 /** `#/log` opens the Ranking tab; `#/log/history` the Match History tab. */
 export function parseRoute(hash: string): Route | null {
@@ -33,6 +34,8 @@ export function parseRoute(hash: string): Route | null {
       return { name: 'log', tab: 'ranking' }
     case '/log/history':
       return { name: 'log', tab: 'history' }
+    case '/network':
+      return { name: 'network' }
     default:
       return null
   }

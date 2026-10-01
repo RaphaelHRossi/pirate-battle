@@ -103,6 +103,17 @@ export function MainMenu() {
           Match History
         </button>
       </nav>
+      <p className="menu-footer">
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => {
+            navigate({ name: 'network' })
+          }}
+        >
+          Network settings
+        </button>
+      </p>
     </MenuScreen>
   )
 }
