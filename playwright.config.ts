@@ -8,6 +8,9 @@ export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: 'reports/test-results',
   fullyParallel: true,
+  // Each worker runs its own Chromium with a WebGL context; more than a
+  // couple exhausts memory on modest machines. Override with --workers.
+  workers: 2,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   reporter: [

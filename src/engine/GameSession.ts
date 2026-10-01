@@ -9,6 +9,7 @@ import { loadGameAssets } from '../render/assets'
 import { MAX_RESOLUTION } from '../render/constants'
 import { GameRenderer } from '../render/GameRenderer'
 import { FixedStepLoop } from './loop'
+import { installTestHooks, readTestParams, type TestParams } from './testHooks'
 
 interface Match {
   world: World
@@ -29,18 +30,23 @@ export class GameSession {
   /** Aborting this removes every listener the session ever attached. */
   private readonly abort = new AbortController()
   private readonly host: HTMLElement
+  private readonly params: TestParams
   private app: Application | null = null
   private match: Match | null = null
   private disposed = false
   private paused = false
+  /** Set by the test hook `pauseClock()`; independent of player pause. */
+  private clockPaused = false
   private frameId: number | null = null
   /** Lives while gameplay keys are attached; aborted on pause. */
   private gameplay: AbortController | null = null
   /** Lives while paused; aborted on resume. */
   private pauseScope: AbortController | null = null
+  private uninstallTestHooks: (() => void) | null = null
 
-  constructor(host: HTMLElement) {
+  constructor(host: HTMLElement, search: string = window.location.search) {
     this.host = host
+    this.params = readTestParams(search)
   }
 
   get isDisposed(): boolean {
@@ -81,7 +87,10 @@ export class GameSession {
     if (this.wasDisposed()) return
 
     // Each match runs on a frozen copy of the config taken at its start.
-    const world = createWorld(snapshotConfig(), randomSeed())
+    const world = createWorld(
+      snapshotConfig(),
+      this.params.seed ?? randomSeed(),
+    )
     const renderer = new GameRenderer(textures, world)
     app.stage.addChild(renderer.root)
 
@@ -109,6 +118,33 @@ export class GameSession {
       observer.disconnect()
     })
     fit()
+
+    if (this.params.testMode) {
+      this.uninstallTestHooks = installTestHooks({
+        getState: () => ({
+          paused: this.paused,
+          world: structuredClone(world),
+        }),
+        pauseClock: () => {
+          this.clockPaused = true
+          this.stopClock()
+        },
+        resumeClock: () => {
+          this.clockPaused = false
+          this.startClock()
+        },
+        advance: (ms) => {
+          if (!Number.isFinite(ms) || ms < 0) {
+            throw new RangeError(
+              `advance(ms) needs a finite ms >= 0, got ${String(ms)}`,
+            )
+          }
+          // A paused match must not move, whoever asks.
+          if (this.paused) render()
+          else loop.advance(ms)
+        },
+      })
+    }
 
     this.beginGameplay(this.match)
     // Deterministic "rendered" signal for e2e tests and debugging.
@@ -163,7 +199,9 @@ export class GameSession {
 
   private startClock(): void {
     const { match } = this
-    if (!match || this.paused || this.frameId !== null) return
+    if (!match || this.paused || this.clockPaused || this.frameId !== null) {
+      return
+    }
     const onFrame = (now: number): void => {
       match.loop.frame(now)
       this.frameId = requestAnimationFrame(onFrame)
@@ -182,6 +220,8 @@ export class GameSession {
     this.disposed = true
     this.stopClock()
     this.abort.abort()
+    this.uninstallTestHooks?.()
+    this.uninstallTestHooks = null
     this.match = null
     // Destroy display objects only; textures stay cached in Assets for reuse.
     this.app?.destroy({ removeView: true }, { children: true })

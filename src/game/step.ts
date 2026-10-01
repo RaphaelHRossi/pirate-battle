@@ -1,3 +1,4 @@
+import { updatePlayerMovement } from './systems/playerMovement'
 import type { InputIntents, World } from './types'
 
 /**
@@ -6,10 +7,10 @@ import type { InputIntents, World } from './types'
  */
 export function step(
   world: World,
-  // Read by the movement system once it exists.
-  _input: Readonly<InputIntents>,
+  input: Readonly<InputIntents>,
   dt: number,
 ): void {
   world.tick += 1
   world.elapsedSeconds += dt
+  updatePlayerMovement(world, input, dt)
 }
