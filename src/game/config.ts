@@ -44,6 +44,17 @@ export interface GameConfig {
     guaranteedShooterWithinFirst: number
     maxAlive: number
     minDistanceFromPlayer: number
+    /** Spawn points sit this far inside the arena edge, so hulls fit. */
+    edgeMargin: number
+    /** Random candidate points tried per spawn before giving up this step. */
+    attempts: number
+  }
+  /** Enemy steering. */
+  ai: {
+    /** How far ahead the obstacle feelers reach, in px. */
+    feelerLength: number
+    /** Angle of the side feelers from the heading. */
+    feelerAngleDeg: number
   }
   projectiles: {
     /** Pre-allocated projectile slots per match. */
@@ -52,9 +63,10 @@ export interface GameConfig {
     radius: number
   }
   effects: {
-    /** Pre-allocated muzzle-flash slots per match. */
+    /** Pre-allocated effect slots (muzzle flashes, explosions) per match. */
     poolSize: number
     muzzleFlashSeconds: number
+    explosionSeconds: number
   }
   player: ShipConfig & { frontGun: GunConfig; broadside: BroadsideConfig }
   chaser: ShipConfig & { contactDamage: number }
@@ -63,6 +75,8 @@ export interface GameConfig {
     range: number
     /** Stops approaching at this distance. */
     stopDistance: number
+    /** Fires only when the player is within this angle of its heading. */
+    aimToleranceDeg: number
     gun: GunConfig
   }
 }
@@ -76,11 +90,16 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     guaranteedShooterWithinFirst: 2,
     maxAlive: 12,
     minDistanceFromPlayer: 500,
+    // Not in the spec: a hull is 96 px long, so 70 px keeps it inside.
+    edgeMargin: 70,
+    attempts: 16,
   },
+  // Not in the spec: tuned so ships turn away from a coast in time.
+  ai: { feelerLength: 140, feelerAngleDeg: 30 },
   // Not in the spec: worst case is ~25 balls alive at once (player plus 12
   // shooters), so 96 slots never run out. 5 px matches the 10 px sprite.
   projectiles: { poolSize: 96, radius: 5 },
-  effects: { poolSize: 32, muzzleFlashSeconds: 0.12 },
+  effects: { poolSize: 48, muzzleFlashSeconds: 0.12, explosionSeconds: 0.6 },
   player: {
     maxHp: 100,
     speed: 180,
@@ -113,6 +132,8 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     hullOffset: 24,
     range: 450,
     stopDistance: 300,
+    // Not in the spec: about a hull's width at firing range.
+    aimToleranceDeg: 8,
     // Speed and ttl are not in the spec: 400 px/s for 1.25 s reaches 500 px,
     // a little beyond the 450 px firing range.
     gun: { damage: 10, speed: 400, ttlSeconds: 1.25, cooldownSeconds: 2 },

@@ -15,6 +15,8 @@ export interface TestParams {
    * single real frame runs before the test takes control with `advance`.
    */
   manualClock: boolean
+  /** `?spawn=off` (test mode only): no enemies spawn on their own. */
+  spawnOff: boolean
 }
 
 export interface TestStateSnapshot {
@@ -54,6 +56,7 @@ export function readTestParams(search: string): TestParams {
     fixture: params.get('fixture') || null,
     debug: params.get('debug') === '1',
     manualClock: params.get('clock') === 'manual',
+    spawnOff: params.get('spawn') === 'off',
   }
 }
 

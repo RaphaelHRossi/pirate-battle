@@ -18,8 +18,11 @@ export class DebugView {
       g.rect(box.minX, box.minY, box.maxX - box.minX, box.maxY - box.minY)
     }
     g.stroke({ width: LINE_WIDTH, color: COLLIDER_COLOR })
-    for (const circle of hullCircles(world.player)) {
-      g.circle(circle.x, circle.y, circle.r)
+    const ships = [world.player, ...world.enemies.filter((e) => e.alive)]
+    for (const ship of ships) {
+      for (const circle of hullCircles(ship)) {
+        g.circle(circle.x, circle.y, circle.r)
+      }
     }
     g.stroke({ width: LINE_WIDTH, color: HULL_COLOR })
     const { radius } = world.config.projectiles

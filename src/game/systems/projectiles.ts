@@ -4,13 +4,14 @@ import {
   hullCircles,
   type Circle,
 } from '../collision'
+import { destroyEnemy } from '../entities'
 import { TIME_EPSILON } from '../math'
 import type { Projectile, Ship, World } from '../types'
 
 /**
- * The only place damage is applied. Removing the projectile in the same
- * call is what makes "each projectile hits at most once" hold: every loop
- * skips dead projectiles, so it can never be seen again.
+ * The only place projectile damage is applied. Removing the projectile in
+ * the same call is what makes "each projectile hits at most once" hold:
+ * every loop skips dead projectiles, so it can never be seen again.
  */
 export function applyHit(projectile: Projectile, ship: Ship): void {
   ship.hp = Math.max(0, ship.hp - projectile.damage)
@@ -38,6 +39,17 @@ function isOutsideArena(
     projectile.x > arena.width ||
     projectile.y > arena.height
   )
+}
+
+/** Player balls hit live enemies only; a kill scores one point. */
+function hitEnemies(world: World, projectile: Projectile, ball: Circle): void {
+  for (const enemy of world.enemies) {
+    if (!enemy.alive) continue
+    if (tryHit(projectile, ball, enemy)) {
+      if (enemy.hp <= 0) destroyEnemy(world, enemy, { scored: true })
+      return // One projectile, one hit.
+    }
+  }
 }
 
 /**
@@ -69,8 +81,8 @@ export function updateProjectiles(world: World, dt: number): void {
       continue
     }
 
-    // Owners never hit their own side. Player shots will test enemies here
-    // once they exist; tryHit stops at the first ship hit.
-    if (projectile.owner === 'enemy') tryHit(projectile, ball, world.player)
+    // Owners never hit their own side.
+    if (projectile.owner === 'player') hitEnemies(world, projectile, ball)
+    else tryHit(projectile, ball, world.player)
   }
 }

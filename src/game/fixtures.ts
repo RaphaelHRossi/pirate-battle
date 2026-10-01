@@ -1,5 +1,5 @@
+import { spawnProjectile } from './entities'
 import { degToRad, wrapAngle } from './math'
-import { spawnProjectile } from './systems/weapons'
 import type { World } from './types'
 
 function placePlayer(

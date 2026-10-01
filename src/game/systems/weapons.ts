@@ -1,49 +1,12 @@
-import type { GunConfig } from '../config'
-import type { DeepReadonly } from '../immutable'
+import { spawnEffect, spawnProjectile } from '../entities'
 import { TIME_EPSILON } from '../math'
-import { acquire } from '../pool'
-import type { InputIntents, PlayerShip, ProjectileOwner, World } from '../types'
+import type { InputIntents, PlayerShip, World } from '../types'
 
 type Side = -1 | 1
 const LEFT: Side = -1
 const RIGHT: Side = 1
 
-export function spawnProjectile(
-  world: World,
-  owner: ProjectileOwner,
-  x: number,
-  y: number,
-  heading: number,
-  gun: DeepReadonly<GunConfig>,
-): void {
-  const projectile = acquire(world.projectiles)
-  projectile.id = world.nextEntityId
-  world.nextEntityId += 1
-  projectile.alive = true
-  projectile.owner = owner
-  projectile.x = x
-  projectile.y = y
-  projectile.vx = Math.cos(heading) * gun.speed
-  projectile.vy = Math.sin(heading) * gun.speed
-  projectile.damage = gun.damage
-  projectile.ttl = gun.ttlSeconds
-}
-
-export function spawnMuzzleFlash(
-  world: World,
-  x: number,
-  y: number,
-  heading: number,
-): void {
-  const flash = acquire(world.muzzleFlashes)
-  flash.alive = true
-  flash.x = x
-  flash.y = y
-  flash.heading = heading
-  flash.ttl = world.config.effects.muzzleFlashSeconds
-}
-
-function isReady(cooldown: number): boolean {
+export function isReady(cooldown: number): boolean {
   return cooldown <= TIME_EPSILON
 }
 
@@ -62,7 +25,7 @@ function fireFront(world: World, ship: PlayerShip): void {
     ship.heading,
     world.config.player.frontGun,
   )
-  spawnMuzzleFlash(world, x, y, ship.heading)
+  spawnEffect(world, 'muzzleFlash', x, y, ship.heading)
 }
 
 /**
@@ -84,7 +47,7 @@ function fireBroadside(world: World, ship: PlayerShip, side: Side): void {
     const x = ship.x + alongX * along + outX
     const y = ship.y + alongY * along + outY
     spawnProjectile(world, 'player', x, y, direction, broadside)
-    spawnMuzzleFlash(world, x, y, direction)
+    spawnEffect(world, 'muzzleFlash', x, y, direction)
   }
 }
 

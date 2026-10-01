@@ -98,6 +98,9 @@ export class GameSession {
       snapshotConfig(),
       this.params.seed ?? randomSeed(),
     )
+    if (this.params.testMode && this.params.spawnOff) {
+      world.spawn.enabled = false
+    }
     if (this.params.testMode && this.params.fixture) {
       applyFixture(world, this.params.fixture)
     }

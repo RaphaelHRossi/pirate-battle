@@ -6,10 +6,16 @@ import { expect } from './test'
 /**
  * Opens the game in test mode with a fixed seed (and optional fixture) and
  * a manual clock: real time never moves the simulation, only `advance()`.
+ * Enemies only spawn on their own when `spawn: true`, so each test decides
+ * exactly which ships exist.
  */
 export async function openGame(
   page: Page,
-  { seed = 1, fixture }: { seed?: number; fixture?: string } = {},
+  {
+    seed = 1,
+    fixture,
+    spawn = false,
+  }: { seed?: number; fixture?: string; spawn?: boolean } = {},
 ): Promise<void> {
   const params = new URLSearchParams({
     test: '1',
@@ -17,6 +23,7 @@ export async function openGame(
     seed: String(seed),
   })
   if (fixture) params.set('fixture', fixture)
+  if (!spawn) params.set('spawn', 'off')
   await page.goto(`/?${params.toString()}`)
   await expect(page.locator('.game-host')).toHaveAttribute(
     'data-status',

@@ -40,6 +40,18 @@ export interface PlayerShip extends Ship {
   cooldowns: WeaponCooldowns
 }
 
+export type EnemyKind = 'chaser' | 'shooter'
+
+/** A pooled enemy. Dead slots (`alive: false`) take no part in anything. */
+export interface Enemy extends Ship {
+  alive: boolean
+  kind: EnemyKind
+  /** Seconds until a Shooter can fire again (unused by Chasers). */
+  gunCooldown: number
+  /** Turn direction committed to while avoiding an obstacle; 0 = none. */
+  avoidTurn: -1 | 0 | 1
+}
+
 export type ProjectileOwner = 'player' | 'enemy'
 
 /** A pooled cannonball. Dead slots (`alive: false`) are reused. */
@@ -57,26 +69,52 @@ export interface Projectile {
   ttl: number
 }
 
-/** A pooled, purely visual flash at a gun's muzzle; lives in game time. */
-export interface MuzzleFlash {
+export type EffectKind = 'muzzleFlash' | 'explosion'
+
+/** A pooled, purely visual effect; lives in game time. */
+export interface Effect {
   alive: boolean
+  kind: EffectKind
   x: number
   y: number
-  /** Direction the shot left in. */
   heading: number
   ttl: number
+}
+
+export type MatchStatus = 'running' | 'ended'
+export type EndReason = 'timeUp' | 'playerDestroyed'
+
+export interface MatchState {
+  status: MatchStatus
+  endReason: EndReason | null
+  /** Simulated seconds left; counts down only while the match runs. */
+  secondsLeft: number
+  /** Enemies destroyed by player projectiles. */
+  score: number
+}
+
+export interface SpawnState {
+  enabled: boolean
+  /** Simulated seconds until the next spawn. */
+  timer: number
+  /** Enemies spawned so far this match. */
+  spawned: number
+  shootersSpawned: number
 }
 
 export interface World {
   readonly config: FrozenGameConfig
   readonly map: FrozenGameMap
   rng: Rng
-  /** Fixed steps simulated so far. */
+  /** Fixed steps simulated while the match was running. */
   tick: number
   /** Simulated time in seconds (tick × step), never wall-clock time. */
   elapsedSeconds: number
   nextEntityId: number
+  match: MatchState
+  spawn: SpawnState
   player: PlayerShip
+  enemies: Enemy[]
   projectiles: Projectile[]
-  muzzleFlashes: MuzzleFlash[]
+  effects: Effect[]
 }

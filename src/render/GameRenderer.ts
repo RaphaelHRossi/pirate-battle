@@ -3,6 +3,7 @@ import type { World } from '../game/types'
 import type { GameTextures } from './assets'
 import { DebugView } from './views/DebugView'
 import { EffectsView } from './views/EffectsView'
+import { EnemiesView } from './views/EnemiesView'
 import { createIslandsView } from './views/IslandsView'
 import { ProjectilesView } from './views/ProjectilesView'
 
@@ -23,6 +24,7 @@ export class GameRenderer {
   private readonly arenaWidth: number
   private readonly arenaHeight: number
   private readonly player: Sprite
+  private readonly enemies: EnemiesView
   private readonly projectiles: ProjectilesView
   private readonly effects: EffectsView
   private readonly debug: DebugView | null
@@ -41,10 +43,19 @@ export class GameRenderer {
     const islands = createIslandsView(world.map, textures.tile)
     this.player = new Sprite({ texture: textures.shipPlayer, anchor: 0.5 })
     this.projectiles = new ProjectilesView(textures.cannonBall, world)
-    this.effects = new EffectsView(textures.muzzleFlash, world)
+    this.enemies = new EnemiesView(
+      { chaser: textures.shipChaser, shooter: textures.shipShooter },
+      world,
+      SHIP_SPRITE_ROTATION_OFFSET,
+    )
+    this.effects = new EffectsView(
+      { muzzleFlash: textures.muzzleFlash, explosion: textures.explosion },
+      world,
+    )
     this.root.addChild(
       water,
       islands,
+      this.enemies.container,
       this.player,
       this.projectiles.container,
       this.effects.container,
@@ -72,8 +83,19 @@ export class GameRenderer {
     const { player } = world
     this.player.position.set(player.x, player.y)
     this.player.rotation = player.heading + SHIP_SPRITE_ROTATION_OFFSET
+    // A sunk player is replaced by its explosion.
+    this.player.visible = player.hp > 0
+    this.enemies.sync(world)
     this.projectiles.sync(world)
     this.effects.sync(world)
     this.debug?.sync(world)
+  }
+
+  /**
+   * Destroys this renderer's display objects. Textures are shared and stay
+   * cached in Assets, so a new match reuses them without reloading.
+   */
+  destroy(): void {
+    this.root.destroy({ children: true })
   }
 }
