@@ -1,40 +1,40 @@
-import { Container, Sprite, type Texture } from 'pixi.js'
+import { Container } from 'pixi.js'
 import type { EnemyKind, World } from '../../game/types'
+import { ShipView, type ShipViewTextures } from './ShipView'
 
-export type EnemyTextures = Readonly<Record<EnemyKind, Texture>>
+export type EnemyTextures = Readonly<Record<EnemyKind, ShipViewTextures>>
 
 /**
- * One sprite per enemy slot, created once. A slot is reused by Chasers and
- * Shooters alike, so its texture follows the kind of the enemy in it.
+ * One ShipView per enemy slot, created once. A slot is reused by Chasers
+ * and Shooters alike, so its art follows the kind of the enemy in it.
  */
 export class EnemiesView {
   readonly container = new Container({ label: 'enemies' })
-  private readonly sprites: Sprite[]
+  private readonly views: ShipView[]
   private readonly textures: EnemyTextures
-  private readonly rotationOffset: number
 
-  constructor(
-    textures: EnemyTextures,
-    world: Readonly<World>,
-    rotationOffset: number,
-  ) {
+  constructor(textures: EnemyTextures, world: Readonly<World>) {
     this.textures = textures
-    this.rotationOffset = rotationOffset
-    this.sprites = world.enemies.map(
-      () => new Sprite({ anchor: 0.5, visible: false }),
-    )
-    this.container.addChild(...this.sprites)
+    this.views = world.enemies.map(() => {
+      const view = new ShipView(textures.chaser)
+      view.container.visible = false
+      return view
+    })
+    this.container.addChild(...this.views.map((view) => view.container))
   }
 
   sync(world: Readonly<World>): void {
     world.enemies.forEach((enemy, index) => {
-      const sprite = this.sprites[index]
-      if (!sprite) return
-      sprite.visible = enemy.alive
+      const view = this.views[index]
+      if (!view) return
+      view.container.visible = enemy.alive
       if (!enemy.alive) return
-      sprite.texture = this.textures[enemy.kind]
-      sprite.position.set(enemy.x, enemy.y)
-      sprite.rotation = enemy.heading + this.rotationOffset
+      view.setTextures(this.textures[enemy.kind])
+      view.sync(enemy, world)
     })
+  }
+
+  destroy(): void {
+    for (const view of this.views) view.destroy()
   }
 }

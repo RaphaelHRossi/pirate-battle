@@ -1,4 +1,4 @@
-import { Container, Sprite, TilingSprite } from 'pixi.js'
+import { Container, TilingSprite } from 'pixi.js'
 import type { World } from '../game/types'
 import type { GameTextures } from './assets'
 import { DebugView } from './views/DebugView'
@@ -6,12 +6,7 @@ import { EffectsView } from './views/EffectsView'
 import { EnemiesView } from './views/EnemiesView'
 import { createIslandsView } from './views/IslandsView'
 import { ProjectilesView } from './views/ProjectilesView'
-
-/**
- * The ship sprites are drawn with the bow pointing down (+y, heading π/2),
- * while heading 0 points right. Subtracting a quarter turn lines them up.
- */
-export const SHIP_SPRITE_ROTATION_OFFSET = -Math.PI / 2
+import { ShipView, type ShipViewTextures } from './views/ShipView'
 
 export interface RendererOptions {
   /** Draw colliders and hull circles (`?debug=1`). */
@@ -23,7 +18,7 @@ export class GameRenderer {
   readonly root = new Container()
   private readonly arenaWidth: number
   private readonly arenaHeight: number
-  private readonly player: Sprite
+  private readonly player: ShipView
   private readonly enemies: EnemiesView
   private readonly projectiles: ProjectilesView
   private readonly effects: EffectsView
@@ -38,27 +33,47 @@ export class GameRenderer {
     this.arenaWidth = width
     this.arenaHeight = height
 
+    const shipTextures = (
+      stages: ShipViewTextures['stages'],
+      barFill: ShipViewTextures['barFill'],
+    ): ShipViewTextures => ({
+      stages,
+      fire: textures.fire,
+      barFrame: textures.healthFrame,
+      barFill,
+    })
+
     const water = new TilingSprite({ texture: textures.water, width, height })
     // Static: built once from the map, never updated per frame.
     const islands = createIslandsView(world.map, textures.tile)
-    this.player = new Sprite({ texture: textures.shipPlayer, anchor: 0.5 })
-    this.projectiles = new ProjectilesView(textures.cannonBall, world)
-    this.enemies = new EnemiesView(
-      { chaser: textures.shipChaser, shooter: textures.shipShooter },
-      world,
-      SHIP_SPRITE_ROTATION_OFFSET,
+    // Green bar for the player, red for enemies.
+    this.player = new ShipView(
+      shipTextures(textures.ships.player, textures.healthFillPlayer),
     )
+    this.enemies = new EnemiesView(
+      {
+        chaser: shipTextures(textures.ships.chaser, textures.healthFillEnemy),
+        shooter: shipTextures(textures.ships.shooter, textures.healthFillEnemy),
+      },
+      world,
+    )
+    this.projectiles = new ProjectilesView(textures.cannonBall, world)
     this.effects = new EffectsView(
-      { muzzleFlash: textures.muzzleFlash, explosion: textures.explosion },
+      {
+        muzzleFlash: textures.muzzleFlash,
+        explosion: textures.explosion,
+        ships: textures.ships,
+      },
       world,
     )
     this.root.addChild(
       water,
       islands,
+      this.effects.under,
       this.enemies.container,
-      this.player,
+      this.player.container,
       this.projectiles.container,
-      this.effects.container,
+      this.effects.over,
     )
 
     this.debug = options.debug ? new DebugView() : null
@@ -80,11 +95,7 @@ export class GameRenderer {
   }
 
   sync(world: Readonly<World>): void {
-    const { player } = world
-    this.player.position.set(player.x, player.y)
-    this.player.rotation = player.heading + SHIP_SPRITE_ROTATION_OFFSET
-    // A sunk player is replaced by its explosion.
-    this.player.visible = player.hp > 0
+    this.player.sync(world.player, world)
     this.enemies.sync(world)
     this.projectiles.sync(world)
     this.effects.sync(world)
@@ -92,10 +103,13 @@ export class GameRenderer {
   }
 
   /**
-   * Destroys this renderer's display objects. Textures are shared and stay
-   * cached in Assets, so a new match reuses them without reloading.
+   * Destroys this renderer's display objects and the health-bar clip
+   * textures it made. Loaded textures are shared and stay cached in
+   * Assets, so a new match reuses them without reloading.
    */
   destroy(): void {
+    this.player.destroy()
+    this.enemies.destroy()
     this.root.destroy({ children: true })
   }
 }

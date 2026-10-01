@@ -1,5 +1,10 @@
 import { circlesOverlap, hullCircles } from '../collision'
-import { destroyEnemy, spawnEffect, spawnProjectile } from '../entities'
+import {
+  damageShip,
+  destroyEnemy,
+  spawnEffect,
+  spawnProjectile,
+} from '../entities'
 import { clamp, degToRad, wrapAngle } from '../math'
 import type { Enemy, World } from '../types'
 import { isReady } from './weapons'
@@ -106,7 +111,7 @@ export function resolveChaserContacts(world: World): void {
       playerHull.some((other) => circlesOverlap(circle, other)),
     )
     if (!touching) continue
-    player.hp = Math.max(0, player.hp - world.config.chaser.contactDamage)
+    damageShip(world, player, world.config.chaser.contactDamage)
     destroyEnemy(world, enemy, { scored: false })
   }
 }

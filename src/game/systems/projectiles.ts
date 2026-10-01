@@ -4,7 +4,7 @@ import {
   hullCircles,
   type Circle,
 } from '../collision'
-import { destroyEnemy } from '../entities'
+import { damageShip, destroyEnemy } from '../entities'
 import { TIME_EPSILON } from '../math'
 import type { Projectile, Ship, World } from '../types'
 
@@ -13,16 +13,25 @@ import type { Projectile, Ship, World } from '../types'
  * the same call is what makes "each projectile hits at most once" hold:
  * every loop skips dead projectiles, so it can never be seen again.
  */
-export function applyHit(projectile: Projectile, ship: Ship): void {
-  ship.hp = Math.max(0, ship.hp - projectile.damage)
+export function applyHit(
+  world: World,
+  projectile: Projectile,
+  ship: Ship,
+): void {
+  damageShip(world, ship, projectile.damage)
   projectile.alive = false
 }
 
 /** Hits `ship` if the ball touches either hull circle; true if it did. */
-function tryHit(projectile: Projectile, ball: Circle, ship: Ship): boolean {
+function tryHit(
+  world: World,
+  projectile: Projectile,
+  ball: Circle,
+  ship: Ship,
+): boolean {
   for (const hull of hullCircles(ship)) {
     if (circlesOverlap(ball, hull)) {
-      applyHit(projectile, ship)
+      applyHit(world, projectile, ship)
       return true
     }
   }
@@ -45,7 +54,7 @@ function isOutsideArena(
 function hitEnemies(world: World, projectile: Projectile, ball: Circle): void {
   for (const enemy of world.enemies) {
     if (!enemy.alive) continue
-    if (tryHit(projectile, ball, enemy)) {
+    if (tryHit(world, projectile, ball, enemy)) {
       if (enemy.hp <= 0) destroyEnemy(world, enemy, { scored: true })
       return // One projectile, one hit.
     }
@@ -83,6 +92,6 @@ export function updateProjectiles(world: World, dt: number): void {
 
     // Owners never hit their own side.
     if (projectile.owner === 'player') hitEnemies(world, projectile, ball)
-    else tryHit(projectile, ball, world.player)
+    else tryHit(world, projectile, ball, world.player)
   }
 }

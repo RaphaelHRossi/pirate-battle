@@ -27,6 +27,8 @@ export interface Ship {
   hullRadius: number
   /** Distance from the ship's centre to each hull circle's centre. */
   hullOffset: number
+  /** Simulation time of the last damage taken, for the hit flash. */
+  lastHitAt: number | null
 }
 
 /** Seconds until each weapon can fire again; 0 means ready. */
@@ -69,7 +71,10 @@ export interface Projectile {
   ttl: number
 }
 
-export type EffectKind = 'muzzleFlash' | 'explosion'
+export type EffectKind = 'muzzleFlash' | 'explosion' | 'wreck'
+
+/** Which ship art a wreck uses. */
+export type ShipSkin = 'player' | EnemyKind
 
 /** A pooled, purely visual effect; lives in game time. */
 export interface Effect {
@@ -79,6 +84,8 @@ export interface Effect {
   y: number
   heading: number
   ttl: number
+  /** Ship art, for wrecks only. */
+  skin: ShipSkin | null
 }
 
 export type MatchStatus = 'running' | 'ended'

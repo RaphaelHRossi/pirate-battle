@@ -67,6 +67,10 @@ export interface GameConfig {
     poolSize: number
     muzzleFlashSeconds: number
     explosionSeconds: number
+    /** How long a sunk enemy's wreck stays before it has faded out. */
+    wreckSeconds: number
+    /** How long a ship flashes after taking damage. */
+    hitFlashSeconds: number
   }
   player: ShipConfig & { frontGun: GunConfig; broadside: BroadsideConfig }
   chaser: ShipConfig & { contactDamage: number }
@@ -99,7 +103,13 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   // Not in the spec: worst case is ~25 balls alive at once (player plus 12
   // shooters), so 96 slots never run out. 5 px matches the 10 px sprite.
   projectiles: { poolSize: 96, radius: 5 },
-  effects: { poolSize: 48, muzzleFlashSeconds: 0.12, explosionSeconds: 0.6 },
+  effects: {
+    poolSize: 48,
+    muzzleFlashSeconds: 0.12,
+    explosionSeconds: 0.6,
+    wreckSeconds: 1.5,
+    hitFlashSeconds: 0.15,
+  },
   player: {
     maxHp: 100,
     speed: 180,

@@ -19,7 +19,15 @@ function deadProjectile(): Projectile {
 }
 
 function deadEffect(): Effect {
-  return { alive: false, kind: 'muzzleFlash', x: 0, y: 0, heading: 0, ttl: 0 }
+  return {
+    alive: false,
+    kind: 'muzzleFlash',
+    x: 0,
+    y: 0,
+    heading: 0,
+    ttl: 0,
+    skin: null,
+  }
 }
 
 function deadEnemy(): Enemy {
@@ -34,6 +42,7 @@ function deadEnemy(): Enemy {
     maxHp: 0,
     hullRadius: 0,
     hullOffset: 0,
+    lastHitAt: null,
     gunCooldown: 0,
     avoidTurn: 0,
   }
@@ -76,6 +85,7 @@ export function createWorld(
       maxHp: player.maxHp,
       hullRadius: player.hullRadius,
       hullOffset: player.hullOffset,
+      lastHitAt: null,
       cooldowns: { front: 0, left: 0, right: 0 },
     },
     // At most `maxAlive` enemies exist at once, so that is the pool size.

@@ -7,6 +7,7 @@ import type {
   EnemyKind,
   ProjectileOwner,
   Ship,
+  ShipSkin,
   World,
 } from './types'
 
@@ -37,21 +38,36 @@ export function spawnProjectile(
   projectile.ttl = gun.ttlSeconds
 }
 
+export function effectLifetime(world: World, kind: EffectKind): number {
+  const { muzzleFlashSeconds, explosionSeconds, wreckSeconds } =
+    world.config.effects
+  if (kind === 'explosion') return explosionSeconds
+  if (kind === 'wreck') return wreckSeconds
+  return muzzleFlashSeconds
+}
+
 export function spawnEffect(
   world: World,
   kind: EffectKind,
   x: number,
   y: number,
   heading: number,
+  skin: ShipSkin | null = null,
 ): void {
-  const { muzzleFlashSeconds, explosionSeconds } = world.config.effects
   const effect = acquire(world.effects)
   effect.alive = true
   effect.kind = kind
   effect.x = x
   effect.y = y
   effect.heading = heading
-  effect.ttl = kind === 'explosion' ? explosionSeconds : muzzleFlashSeconds
+  effect.ttl = effectLifetime(world, kind)
+  effect.skin = skin
+}
+
+/** All damage goes through here, so every hit also starts the hit flash. */
+export function damageShip(world: World, ship: Ship, amount: number): void {
+  ship.hp = Math.max(0, ship.hp - amount)
+  ship.lastHitAt = world.elapsedSeconds
 }
 
 /**
@@ -78,6 +94,7 @@ export function spawnEnemy(
   enemy.maxHp = stats.maxHp
   enemy.hullRadius = stats.hullRadius
   enemy.hullOffset = stats.hullOffset
+  enemy.lastHitAt = null
   enemy.gunCooldown = 0
   enemy.avoidTurn = 0
   return enemy
@@ -95,6 +112,8 @@ export function destroyEnemy(
   enemy.alive = false
   enemy.hp = 0
   if (scored) world.match.score += 1
+  // The wreck stays where the ship sank and fades; the explosion plays over it.
+  spawnEffect(world, 'wreck', enemy.x, enemy.y, enemy.heading, enemy.kind)
   spawnEffect(world, 'explosion', enemy.x, enemy.y, enemy.heading)
 }
 

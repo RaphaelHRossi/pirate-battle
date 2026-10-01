@@ -71,6 +71,7 @@ function findSpawnPoint(world: World, kind: EnemyKind): Ship | null {
       maxHp: stats.maxHp,
       hullRadius: stats.hullRadius,
       hullOffset: stats.hullOffset,
+      lastHitAt: null,
     }
     if (isFree(world, candidate)) return candidate
   }
