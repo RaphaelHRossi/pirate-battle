@@ -1,5 +1,6 @@
 import { seedFromString } from '../game/rng'
 import type { World } from '../game/types'
+import type { RendererState } from '../render/inspection'
 
 export interface TestParams {
   /** `?test=1`: expose `window.__pirate`. */
@@ -29,6 +30,12 @@ export interface RenderStats {
   gpuTextures: number
   /** Texture objects held in the Pixi Assets cache (shared by sessions). */
   cachedTextures: number
+  /** Renderer resolution: min(devicePixelRatio, 2). */
+  resolution: number
+  /** Canvas size in CSS pixels and in backing-store pixels. */
+  canvas: { cssWidth: number; cssHeight: number; width: number; height: number }
+  /** Arena placement and per-ship drawing state. */
+  renderer: RendererState | null
 }
 
 export interface TestStateSnapshot {

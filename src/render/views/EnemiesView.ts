@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
 import type { EnemyKind, World } from '../../game/types'
+import type { ShipViewState } from '../inspection'
 import { ShipView, type ShipViewTextures } from './ShipView'
 
 export type EnemyTextures = Readonly<Record<EnemyKind, ShipViewTextures>>
@@ -31,6 +32,17 @@ export class EnemiesView {
       if (!enemy.alive) return
       view.setTextures(this.textures[enemy.kind])
       view.sync(enemy, world)
+    })
+  }
+
+  /** What each live enemy's view draws (test-mode inspection only). */
+  inspect(
+    world: Readonly<World>,
+  ): (ShipViewState & { id: number; kind: EnemyKind })[] {
+    return world.enemies.flatMap((enemy, index) => {
+      const view = this.views[index]
+      if (!view || !enemy.alive) return []
+      return [{ id: enemy.id, kind: enemy.kind, ...view.inspect() }]
     })
   }
 

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import type { TestStateSnapshot } from '../../src/engine/testHooks'
+import type { RenderStats, TestStateSnapshot } from '../../src/engine/testHooks'
 import type { Projectile } from '../../src/game/types'
 import { expect } from './test'
 
@@ -126,4 +126,12 @@ export async function finishMatchByTime(page: Page): Promise<void> {
   expect((await getState(page)).world.match.status).toBe('ended')
   await advance(page, config.match.resultDelaySeconds * 1000)
   await expect(page).toHaveURL(/#\/result$/)
+}
+
+/** What the renderer draws right now (arena placement, ships, canvas). */
+export function getRenderStats(page: Page): Promise<RenderStats> {
+  return page.evaluate(() => {
+    if (!window.__pirate) throw new Error('Test hooks are not installed')
+    return window.__pirate.getRenderStats()
+  })
 }

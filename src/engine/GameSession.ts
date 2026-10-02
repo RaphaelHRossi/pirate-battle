@@ -397,7 +397,21 @@ export class GameSession {
             ? // eslint-disable-next-line @typescript-eslint/no-deprecated
               textures.managedTextures.length
             : 0
-        return { gpuTextures, cachedTextures: countCachedTextures() }
+        const canvas = this.app?.canvas
+        return {
+          gpuTextures,
+          cachedTextures: countCachedTextures(),
+          resolution: this.app?.renderer.resolution ?? 0,
+          canvas: {
+            cssWidth: canvas?.clientWidth ?? 0,
+            cssHeight: canvas?.clientHeight ?? 0,
+            width: canvas?.width ?? 0,
+            height: canvas?.height ?? 0,
+          },
+          renderer: this.match
+            ? this.match.renderer.inspect(this.match.world)
+            : null,
+        }
       },
     })
   }

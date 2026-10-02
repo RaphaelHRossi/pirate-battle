@@ -1,6 +1,7 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js'
 import type { Ship, World } from '../../game/types'
 import type { ShipStages } from '../assets'
+import type { ShipViewState } from '../inspection'
 import { SHIP_HEALTH_BAR } from '../uiLayout'
 
 /**
@@ -47,6 +48,15 @@ class HealthBar {
   private readonly fillSource: Texture
   private clipped: Texture | null = null
   private ratio = -1
+
+  /** The hp ratio the fill currently shows, 0..1. */
+  get shownRatio(): number {
+    return this.ratio
+  }
+
+  get fillVisible(): boolean {
+    return this.fill.visible
+  }
 
   constructor(frame: Texture, fill: Texture) {
     this.fillSource = fill
@@ -154,6 +164,21 @@ export class ShipView {
     this.bar.container.visible = !sunk
     this.bar.container.position.set(ship.x, ship.y - BAR_OFFSET_Y)
     this.bar.setRatio(ship.hp / ship.maxHp)
+  }
+
+  /**
+   * What this view currently draws (test-mode inspection only): the
+   * damage stage of the hull texture on screen and the health bar state.
+   */
+  inspect(): ShipViewState {
+    const shown = this.textures.stages.indexOf(this.hull.texture)
+    return {
+      visible: this.container.visible,
+      damageStage: shown,
+      barVisible: this.bar.container.visible,
+      barFillRatio: this.bar.fillVisible ? this.bar.shownRatio : 0,
+      burning: this.fires.some((fire) => fire.visible),
+    }
   }
 
   destroy(): void {

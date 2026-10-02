@@ -1,6 +1,7 @@
 import { Container, TilingSprite } from 'pixi.js'
 import type { World } from '../game/types'
 import type { GameTextures } from './assets'
+import type { RendererState } from './inspection'
 import { DebugView } from './views/DebugView'
 import { EffectsView } from './views/EffectsView'
 import { EnemiesView } from './views/EnemiesView'
@@ -92,6 +93,24 @@ export class GameRenderer {
       (screenWidth - this.arenaWidth * scale) / 2,
       (screenHeight - this.arenaHeight * scale) / 2,
     )
+  }
+
+  /** Reads back the display objects; never called by the frame loop. */
+  inspect(world: Readonly<World>): RendererState {
+    const scale = this.root.scale.x
+    return {
+      layout: {
+        scale,
+        x: this.root.position.x,
+        y: this.root.position.y,
+        width: this.arenaWidth * scale,
+        height: this.arenaHeight * scale,
+      },
+      ships: [
+        { id: world.player.id, kind: 'player', ...this.player.inspect() },
+        ...this.enemies.inspect(world),
+      ],
+    }
   }
 
   sync(world: Readonly<World>): void {

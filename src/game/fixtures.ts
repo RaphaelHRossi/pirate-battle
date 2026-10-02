@@ -58,6 +58,18 @@ export const GAME_FIXTURES: Readonly<Record<string, (world: World) => void>> = {
     placePlayer(world, 720, 256, Math.PI)
     spawnEnemy(world, 'chaser', 130, 256, 0)
   },
+  /** A Shooter 350 px straight ahead of the player, in range, facing it. */
+  'shooter-ahead': (world) => {
+    world.spawn.enabled = false
+    const { x, y } = world.player
+    spawnEnemy(world, 'shooter', x, y - 350, FACING_DOWN)
+  },
+  /** Like chaser-behind-island, with a Shooter west of the island. */
+  'shooter-behind-island': (world) => {
+    world.spawn.enabled = false
+    placePlayer(world, 720, 256, Math.PI)
+    spawnEnemy(world, 'shooter', 130, 256, 0)
+  },
   /** Player low in the open column, a Shooter 800 px north, out of range. */
   'shooter-far': (world) => {
     world.spawn.enabled = false
