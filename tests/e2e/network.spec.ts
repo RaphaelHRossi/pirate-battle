@@ -72,3 +72,34 @@ test('Reset clears the mock DB, outbox, last result and scenario, and keeps opti
   await page.getByRole('button', { name: 'Match History' }).click()
   await expect(page.getByText('No battles yet.')).toBeVisible()
 })
+
+test('a failing API never blocks the options or the game', async ({ page }) => {
+  // A different value each time, so every round really saves something.
+  const rounds = [
+    { scenario: 'server-error', seconds: 90, after1s: '01:29' },
+    { scenario: 'offline', seconds: 100, after1s: '01:39' },
+    { scenario: 'timeout', seconds: 110, after1s: '01:49' },
+  ]
+  for (const { scenario, seconds, after1s } of rounds) {
+    await page.goto(
+      `/?test=1&clock=manual&spawn=off&scenario=${scenario}#/options`,
+    )
+    const session = page.getByRole('textbox', { name: 'Game session time' })
+    await session.fill(String(seconds))
+    await expect(page.getByTestId('options-status')).toHaveText(
+      'Saved. Changes apply to your next match.',
+    )
+    await page.getByRole('button', { name: 'Main Menu' }).click()
+    await page.getByRole('button', { name: 'Play' }).click()
+    await expect(page.locator('.game-host')).toHaveAttribute(
+      'data-status',
+      'ready',
+    )
+    const tick = await page.evaluate(() => {
+      window.__pirate?.advance(1000)
+      return window.__pirate?.getState().world.tick
+    })
+    expect(tick).toBe(60)
+    await expect(page.getByTestId('hud-time')).toHaveText(after1s)
+  }
+})

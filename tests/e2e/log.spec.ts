@@ -187,3 +187,79 @@ test.describe('when the history fails', () => {
     await expect(rows(page)).toHaveCount(5)
   })
 })
+
+/** Counts the page's GET /api/ranking requests. */
+function countRankingRequests(page: Page): () => number {
+  let count = 0
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/ranking') count += 1
+  })
+  return () => count
+}
+
+test.describe('network failures', () => {
+  test.use({ allowedConsoleErrors: [/Failed to load resource/] })
+
+  test('5xx answers are retried twice, then the error is shown', async ({
+    page,
+  }) => {
+    const requests = countRankingRequests(page)
+    await page.goto('/?scenario=server-error#/log')
+    await expect(page.getByRole('alert')).toContainText('(500)', {
+      timeout: 10_000,
+    })
+    await page.waitForTimeout(1500)
+    expect(requests()).toBe(3)
+  })
+
+  test('4xx answers are not retried', async ({ page }) => {
+    const requests = countRankingRequests(page)
+    await page.goto('/?scenario=bad-request#/log')
+    await expect(page.getByRole('alert')).toContainText('(400)')
+    await page.waitForTimeout(1500)
+    expect(requests()).toBe(1)
+  })
+
+  test('a lost connection is retried, then reported', async ({ page }) => {
+    const requests = countRankingRequests(page)
+    await page.goto('/?scenario=offline#/log')
+    await expect(page.getByRole('alert')).toContainText(
+      'Could not reach the server',
+      { timeout: 10_000 },
+    )
+    expect(requests()).toBe(3)
+  })
+
+  test('a server that never answers times out, then is reported', async ({
+    page,
+  }) => {
+    // 3 attempts × 5 s timeout + 0.5 s + 1 s of backoff.
+    test.slow()
+    await page.goto('/?scenario=timeout#/log')
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Loading…' }),
+    ).toBeVisible()
+    await expect(page.getByRole('alert')).toContainText('took too long', {
+      timeout: 25_000,
+    })
+  })
+})
+
+test('a tab shown again comes from the cache at once and refreshes in the background', async ({
+  page,
+}) => {
+  const requests = countRankingRequests(page)
+  await page.goto('/?scenario=slow#/log')
+  await expect(rows(page)).toHaveCount(5, { timeout: 5000 })
+  const afterFirstLoad = requests()
+
+  await page.getByRole('button', { name: 'Main Menu' }).click()
+  await page.getByRole('button', { name: 'Ranking' }).click()
+  // Cached rows immediately (the slow server takes 2 s)...
+  await expect(rows(page)).toHaveCount(5, { timeout: 500 })
+  // ...while a background refetch is under way.
+  const updating = page.locator('.log-updating')
+  await expect(updating).toHaveText('Updating…')
+  await expect(updating).toHaveText('', { timeout: 5000 })
+  expect(requests()).toBe(afterFirstLoad + 1)
+})
