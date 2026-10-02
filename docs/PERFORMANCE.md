@@ -2,22 +2,22 @@
 
 The goal (CHALLENGE.md §9) is **60 FPS** in an optimised build on a documented reference machine. Over a three-minute match we record the frame rate, the 95th-percentile frame time and the entity count, and we check memory after five start → play → leave cycles.
 
-> **Status:** the memory results below are measured. The three-minute FPS run is a manual step; its numbers are marked **`TODO (manual run)`** until they are filled in from `docs/perf/run-180s-3s.json`.
+> **Status:** all results below are measured. The three-minute run was played by hand on the machine below (`docs/perf/run-180s-3s.json`, recorded 2026-10-02 02:04 UTC); the memory results come from `npm run perf:memory`.
 
 ## Environment
 
 Collected with PowerShell; raw values in [`perf/environment.json`](perf/environment.json).
 
-|                         |                                                                                           |
-| ----------------------- | ----------------------------------------------------------------------------------------- |
-| CPU                     | AMD Ryzen 5 5600GT, 6 cores / 12 threads, 3.6 GHz                                         |
-| GPU                     | NVIDIA GeForce RTX 5060 (driver 32.0.16.1714); integrated Radeon unused                   |
-| RAM                     | 13.9 GB visible to Windows                                                                |
-| OS                      | Windows 11 IoT Enterprise LTSC 10.0.26100, 64-bit                                         |
-| Display                 | 1920×1080 at **164 Hz** (primary); second 1920×1080 screen                                |
-| Browser (manual run)    | Google Chrome 154.0.8037.93 — `TODO (manual run)`: confirm the version used               |
-| Browser (memory script) | Chromium 153.0.8010.12, Playwright, headless, 1280×720, DPR 1                             |
-| Build                   | `npm run build` (Vite production bundle, MSW enabled), served by `vite preview` or Vercel |
+|                         |                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| CPU                     | AMD Ryzen 5 5600GT, 6 cores / 12 threads, 3.6 GHz                                                                          |
+| GPU                     | NVIDIA GeForce RTX 5060 (driver 32.0.16.1714); integrated Radeon unused                                                    |
+| RAM                     | 13.9 GB visible to Windows                                                                                                 |
+| OS                      | Windows 11 IoT Enterprise LTSC 10.0.26100, 64-bit                                                                          |
+| Display                 | 1920×1080 at **164 Hz** (primary); second 1920×1080 screen                                                                 |
+| Browser (manual run)    | Google Chrome 154 (installed build 154.0.8037.93; the user agent reports `Chrome/154.0.0.0`), full screen 1920×1080, DPR 1 |
+| Browser (memory script) | Chromium 153.0.8010.12, Playwright, headless, 1280×720, DPR 1                                                              |
+| Build                   | `npm run build` (Vite production bundle, MSW enabled), served by `vite preview` or Vercel                                  |
 
 ## Method
 
@@ -53,19 +53,19 @@ Adding `?perf=1` to the URL enables a recorder in `GameSession` (`src/engine/per
 
 ### Three-minute match (`?perf=1`, 180 s session, 3 s spawn)
 
-Source: `docs/perf/run-180s-3s.json` — **`TODO (manual run)`**
+Source: [`perf/run-180s-3s.json`](perf/run-180s-3s.json): 180 s session, 3 s spawn interval, played to time up without pausing.
 
-| Metric                                                | Value                                          |
-| ----------------------------------------------------- | ---------------------------------------------- |
-| Frames recorded                                       | `TODO (manual run)`                            |
-| Average FPS                                           | `TODO (manual run)`                            |
-| Frame time p50                                        | `TODO (manual run)` ms                         |
-| Frame time **p95**                                    | `TODO (manual run)` ms                         |
-| Frame time p99 / max                                  | `TODO (manual run)` / `TODO (manual run)` ms   |
-| Frames > 16.7 ms / > 33.3 ms                          | `TODO (manual run)` / `TODO (manual run)`      |
-| Entities max (enemies / projectiles / effects at max) | `TODO (manual run)` (`TODO` / `TODO` / `TODO`) |
-| Entities average                                      | `TODO (manual run)`                            |
-| Viewport / DPR                                        | `TODO (manual run)`                            |
+| Metric                                                | Value                           |
+| ----------------------------------------------------- | ------------------------------- |
+| Frames recorded                                       | 29,700 over 180.0 s             |
+| Average FPS                                           | 165 (display: 164 Hz)           |
+| Frame time p50                                        | 6.10 ms                         |
+| Frame time **p95**                                    | **6.20 ms**                     |
+| Frame time p99 / max                                  | 6.20 / 9.07 ms                  |
+| Frames > 16.7 ms / > 33.3 ms                          | 0 / 0                           |
+| Entities max (enemies / projectiles / effects at max) | 17 (5 / 5 / 6, plus the player) |
+| Entities average                                      | 8.8                             |
+| Viewport / DPR                                        | 1920×1080 / 1                   |
 
 ### Memory after start → play → leave (5 cycles × 15 s)
 
@@ -85,7 +85,10 @@ Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leavi
 
 ## Interpretation
 
-- **Frame rate:** `TODO (manual run)`.
+- **Frame rate: the 60 FPS target is met with a wide margin.**
+  - **p95 is 6.2 ms against the 16.7 ms budget of a 60 FPS frame.** Even p99 is 6.2 ms and the slowest frame of the 3 minutes is 9.07 ms, still below one 60 Hz frame. Not a single frame went over 16.7 ms (or 33.3 ms), so there was no visible stutter.
+  - **The game kept up with the 164 Hz display.** The average of 6.06 ms per frame (165 FPS) is the monitor's refresh interval, and p50 = p95 = p99 ≈ 6.1–6.2 ms means frames arrived at an even pace. The real cost of a frame is therefore below 6.1 ms; it cannot be measured more finely from rAF intervals, which are paced by the display.
+  - **Read as a 60 FPS budget**, each frame used at most about 37% (p95) to 54% (max) of the 16.7 ms available.
   - **The 164 Hz monitor:** Chrome fires `requestAnimationFrame` at the display rate, so FPS is reported against **164 Hz** (6.1 ms frames), not 60. The game still simulates at a fixed 60 steps/s; extra frames only re-render.
   - **The 60 FPS target:** check it with **p95 ≤ 16.7 ms** and few frames over 33.3 ms. Average FPS alone hides stutter; p95 is what a player feels.
   - **On a 60 Hz display** the same run caps at ~60 FPS; the frame-time percentiles are the comparable figures.
@@ -106,6 +109,8 @@ Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leavi
 - **One machine, one browser, one run:** no variance across runs or devices was measured, and mobile performance was not profiled on a real phone.
 - **GC is forced** before each memory reading. Real sessions hold more garbage between collections.
 - **The 15 s cycles are short.** Long matches are covered by the 3-minute run, not by the memory script.
+- **The 3-minute run peaked at 17 entities** (5 enemies). Enemies were sunk about as fast as they spawned, so the cap of 12 enemies (with their shots and effects, roughly 40–50 entities) was never reached. The heaviest possible scene was therefore not measured; given a p95 at a third of the budget, it is unlikely to approach 16.7 ms on this machine, but that is an extrapolation.
+- **A 164 Hz display caps what rAF can show.** Frame times measure presented frames, so they show the display pace (6.1 ms) and an upper bound on the work per frame, not its exact cost.
 - **The `?perf=1` overlay** and the recorder's `number[]` (about 30k entries for 3 min at 164 Hz) add a small constant overhead.
 
 ## How to do the three-minute run (manual)
@@ -120,11 +125,11 @@ Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leavi
    - if the ship sinks before 3 minutes, start again: the run must last the full session
 6. **On the result screen**, click **Download performance report**.
 7. **Save the file** as `docs/perf/run-180s-3s.json`.
-8. **Fill in the `TODO (manual run)` cells** of this document from the JSON:
+8. **Update the results above** from the JSON (the current figures come from the run of 2026-10-02):
    - `frames`, `avgFps`
    - `frameTimeMs.p50/p95/p99/max`
    - `longFrames`
    - `entities.max/avg/atMax`
    - `environment.viewport` and `devicePixelRatio`
 
-   Then write the frame-rate interpretation line.
+   Then update the frame-rate interpretation.

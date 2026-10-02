@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-02T02:04:03.273Z",
+  "durationSeconds": 180,
+  "frames": 29700,
+  "avgFps": 165,
+  "frameTimeMs": {
+    "avg": 6.06,
+    "p50": 6.1,
+    "p95": 6.2,
+    "p99": 6.2,
+    "max": 9.07
+  },
+  "longFrames": {
+    "over16_7ms": 0,
+    "over33_3ms": 0
+  },
+  "entities": {
+    "max": 17,
+    "avg": 8.8,
+    "atMax": {
+      "enemies": 5,
+      "projectiles": 5,
+      "effects": 6
+    }
+  },
+  "config": {
+    "sessionSeconds": 180,
+    "spawnSeconds": 3,
+    "full": {
+      "arena": {
+        "width": 1920,
+        "height": 1080
+      },
+      "match": {
+        "durationSeconds": 180,
+        "resultDelaySeconds": 2.5
+      },
+      "spawn": {
+        "intervalSeconds": 3,
+        "chaserChance": 0.6,
+        "guaranteedShooterWithinFirst": 2,
+        "maxAlive": 12,
+        "minDistanceFromPlayer": 500,
+        "edgeMargin": 70,
+        "attempts": 16
+      },
+      "ai": {
+        "feelerLength": 140,
+        "feelerAngleDeg": 30
+      },
+      "projectiles": {
+        "poolSize": 96,
+        "radius": 5
+      },
+      "effects": {
+        "poolSize": 48,
+        "muzzleFlashSeconds": 0.12,
+        "explosionSeconds": 0.6,
+        "wreckSeconds": 1.5,
+        "hitFlashSeconds": 0.15
+      },
+      "player": {
+        "maxHp": 100,
+        "speed": 180,
+        "turnSpeedDegPerSec": 150,
+        "hullRadius": 24,
+        "hullOffset": 24,
+        "frontGun": {
+          "damage": 20,
+          "speed": 600,
+          "ttlSeconds": 1,
+          "cooldownSeconds": 0.4
+        },
+        "broadside": {
+          "count": 3,
+          "spacing": 24,
+          "damage": 15,
+          "speed": 520,
+          "ttlSeconds": 0.8,
+          "cooldownSeconds": 1.5
+        }
+      },
+      "chaser": {
+        "maxHp": 40,
+        "speed": 150,
+        "turnSpeedDegPerSec": 120,
+        "hullRadius": 24,
+        "hullOffset": 24,
+        "contactDamage": 25
+      },
+      "shooter": {
+        "maxHp": 60,
+        "speed": 110,
+        "turnSpeedDegPerSec": 90,
+        "hullRadius": 24,
+        "hullOffset": 24,
+        "range": 450,
+        "stopDistance": 300,
+        "aimToleranceDeg": 8,
+        "gun": {
+          "damage": 10,
+          "speed": 400,
+          "ttlSeconds": 1.25,
+          "cooldownSeconds": 2
+        }
+      }
+    }
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "devicePixelRatio": 1,
+    "screen": {
+      "width": 1920,
+      "height": 1080
+    },
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    }
+  }
+}
