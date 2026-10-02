@@ -2,10 +2,14 @@ import { defineConfig, devices } from '@playwright/test'
 
 const PORT = 4173
 const BASE_URL = `http://localhost:${String(PORT)}`
+/** The Vite dev server, for the one check that needs React Strict Mode. */
+const DEV_PORT = 5173
+const DEV_URL = `http://localhost:${String(DEV_PORT)}`
 const isCI = Boolean(process.env.CI)
 
 export default defineConfig({
-  // e2e/ (behaviour) and visual/ (screenshots); helpers/ has no specs.
+  // e2e/ (behaviour), visual/ (screenshots), dev/ (dev-server only);
+  // helpers/ has no specs.
   testDir: 'tests',
   outputDir: 'reports/test-results',
   fullyParallel: true,
@@ -38,22 +42,39 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
   },
-  // Test the production bundle (MSW included), not the dev server.
-  webServer: {
-    command: `npx vite build && npx vite preview --port ${String(PORT)} --strictPort`,
-    url: BASE_URL,
-    reuseExistingServer: !isCI,
-    timeout: 120_000,
-  },
+  webServer: [
+    // Everything is tested against the production bundle (MSW included)...
+    {
+      command: `npx vite build && npx vite preview --port ${String(PORT)} --strictPort`,
+      url: BASE_URL,
+      reuseExistingServer: !isCI,
+      timeout: 120_000,
+    },
+    // ...except the Strict Mode check: React only double-mounts in
+    // development, so it needs the dev server.
+    {
+      command: `npx vite --port ${String(DEV_PORT)} --strictPort`,
+      url: DEV_URL,
+      reuseExistingServer: !isCI,
+      timeout: 120_000,
+    },
+  ],
   projects: [
     {
       name: 'desktop-chromium',
+      testIgnore: 'dev/**',
       use: { ...devices['Desktop Chrome'] },
     },
     {
       // Chromium-based, isMobile + hasTouch, landscape viewport.
       name: 'mobile-chromium',
+      testIgnore: 'dev/**',
       use: { ...devices['Pixel 7 landscape'] },
+    },
+    {
+      name: 'dev-strict-mode',
+      testMatch: 'dev/**/*.spec.ts',
+      use: { ...devices['Desktop Chrome'], baseURL: DEV_URL },
     },
   ],
 })
