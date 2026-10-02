@@ -118,6 +118,23 @@ function toGameTextures(loaded: Record<string, unknown>): GameTextures {
   }
 }
 
+/**
+ * How many Texture objects our loader holds in the Pixi Assets cache: one
+ * per image, plus every frame of each spritesheet. Constant once loaded;
+ * if it grew from match to match, textures would be leaking.
+ */
+export function countCachedTextures(): number {
+  let count = 0
+  for (const alias of Object.keys(gameManifest)) {
+    if (!Assets.cache.has(alias)) continue
+    const value: unknown = Assets.cache.get(alias)
+    if (value instanceof Spritesheet)
+      count += Object.keys(value.textures).length
+    else if (isTexture(value)) count += 1
+  }
+  return count
+}
+
 let registered = false
 let pending: Promise<GameTextures> | null = null
 

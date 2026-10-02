@@ -13,12 +13,18 @@ import { createInputState } from '../input/InputState'
 import { createIntentTracker, type Intent } from '../input/intents'
 import { attachKeyboard } from '../input/keyboard'
 import { PORTRAIT_TOUCH_QUERY } from '../input/orientation'
-import { loadGameAssets, type GameTextures } from '../render/assets'
+import {
+  countCachedTextures,
+  loadGameAssets,
+  type GameTextures,
+} from '../render/assets'
 import { MAX_RESOLUTION } from '../render/constants'
 import { GameRenderer } from '../render/GameRenderer'
 import type { MatchResult } from '../storage/lastResult'
+import { savePerfReport } from '../storage/perfReport'
 import { FixedStepLoop } from './loop'
 import { createMatchResult } from './matchResult'
+import { PerfRecorder } from './perf'
 import {
   INITIAL_SNAPSHOT,
   sameSnapshot,
@@ -35,6 +41,8 @@ interface Match {
   result: MatchResult | null
   /** Simulated seconds since the match ended. */
   endedSeconds: number
+  /** Frame-time recorder, with `?perf=1` only. */
+  perf: PerfRecorder | null
 }
 
 export interface SessionOptions {
@@ -297,7 +305,13 @@ export class GameSession {
     })
     renderer.layout(this.screen.width, this.screen.height)
     app.stage.addChild(renderer.root)
-    return { world, renderer, result: null, endedSeconds: 0 }
+    return {
+      world,
+      renderer,
+      result: null,
+      endedSeconds: 0,
+      perf: this.params.perf ? new PerfRecorder() : null,
+    }
   }
 
   /**
@@ -310,6 +324,10 @@ export class GameSession {
       return
     }
     match.result = createMatchResult(match.world)
+    if (match.perf) {
+      match.perf.gap()
+      savePerfReport(match.perf.report(match.world.config))
+    }
     this.endGameplay()
     this.options.onMatchEnd?.(match.result)
   }
@@ -335,6 +353,12 @@ export class GameSession {
     if (!this.app || !this.match) return
     this.match.renderer.sync(this.match.world)
     this.app.render()
+    this.match.perf?.sample(this.match.world)
+  }
+
+  /** Live FPS and peak entities for the `?perf=1` overlay. */
+  perfLive(): { fps: number; entities: number } | null {
+    return this.match?.perf?.live() ?? null
   }
 
   private installTestHooks(): void {
@@ -363,6 +387,17 @@ export class GameSession {
       },
       restart: () => {
         this.restart()
+      },
+      getRenderStats: () => {
+        const textures = this.app?.renderer.texture
+        // Test-mode diagnostics only. Pixi 8.15 deprecated this getter
+        // without a public replacement; it still reports the live count.
+        const gpuTextures =
+          textures && 'managedTextures' in textures
+            ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+              textures.managedTextures.length
+            : 0
+        return { gpuTextures, cachedTextures: countCachedTextures() }
       },
     })
   }
@@ -466,6 +501,12 @@ export class GameSession {
       return
     }
     const onFrame = (now: number): void => {
+      // Only frames of a match being played count (not the end freeze).
+      const perf = this.match?.perf
+      if (perf) {
+        if (this.match?.world.match.status === 'running') perf.frame(now)
+        else perf.gap()
+      }
       this.loop.frame(now)
       this.frameId = requestAnimationFrame(onFrame)
     }
@@ -476,6 +517,8 @@ export class GameSession {
     if (this.frameId !== null) cancelAnimationFrame(this.frameId)
     this.frameId = null
     this.loop.resetClock()
+    // Paused or hidden time is not a slow frame.
+    this.match?.perf?.gap()
   }
 
   destroy(): void {

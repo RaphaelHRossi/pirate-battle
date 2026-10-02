@@ -1,13 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { navigate } from '../app/router'
 import type { SessionOptions } from '../engine/GameSession'
 import { TouchControls } from '../input/TouchControls'
 import { recordCompletedMatch } from '../api/registration'
 import { loadOptions } from '../storage/options'
+import { readTestParams } from '../engine/testHooks'
 import { Announcer } from './Announcer'
 import { Hud } from './Hud'
 import { LoadingScreen } from './LoadingScreen'
 import { PauseDialog } from './PauseDialog'
+import { PerfOverlay } from './PerfOverlay'
 import { useGameSession } from './useGameSession'
 
 /**
@@ -33,6 +35,7 @@ export function GameView() {
   const renderCount = useRef(0)
   const { snapshot, controls } = useGameSession(hostRef, SESSION_OPTIONS)
   const { status, resultReady } = snapshot
+  const [perfMode] = useState(() => readTestParams(window.location.search).perf)
   const inMatch =
     status === 'running' || status === 'paused' || status === 'ended'
 
@@ -87,6 +90,7 @@ export function GameView() {
         }}
       />
       <Announcer snapshot={snapshot} />
+      {perfMode && <PerfOverlay read={controls.perfLive} />}
       {import.meta.env.DEV && (
         <span ref={badgeRef} className="render-counter" aria-hidden="true" />
       )}

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { outbox } from '../api/outbox'
 import { useRegistrationStatus, useSendMatch } from '../api/queries'
 import { navigate } from '../app/router'
+import { readTestParams } from '../engine/testHooks'
 import { loadLastResult, type MatchResult } from '../storage/lastResult'
+import { loadPerfReport } from '../storage/perfReport'
 import { formatTime } from './format'
 import { MenuScreen } from './MenuScreen'
 
@@ -45,6 +47,34 @@ function Registration({ matchId }: { matchId: string }) {
         </button>
       )}
     </span>
+  )
+}
+
+/**
+ * `?perf=1`: the frame-time report of the last match, as a JSON download
+ * (docs/PERFORMANCE.md explains how it is used).
+ */
+function PerfDownload() {
+  const [report] = useState(() =>
+    readTestParams(window.location.search).perf ? loadPerfReport() : null,
+  )
+  if (!report) return null
+  const download = (): void => {
+    const blob = new Blob([report.json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const date = report.recordedAt.slice(0, 19).replace(/[:T]/g, '-')
+    link.href = url
+    link.download = `perf-${String(report.sessionSeconds)}s-${String(report.spawnSeconds)}s-${date}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  return (
+    <p className="panel-note">
+      <button type="button" className="link-button" onClick={download}>
+        Download performance report
+      </button>
+    </p>
   )
 }
 
@@ -123,6 +153,7 @@ export function ResultScreen() {
           </dd>
         </div>
       </dl>
+      <PerfDownload />
       <Actions />
     </MenuScreen>
   )

@@ -58,6 +58,10 @@ class SessionHandle {
     void this.session?.retry()
   }
 
+  // An arrow property: handed to <PerfOverlay> as a stable function.
+  readonly perfLive = (): { fps: number; entities: number } | null =>
+    this.session?.perfLive() ?? null
+
   // Arrow properties: passed to <TouchControls> as a stable object.
   readonly press = (pointerId: number, intent: Intent): void => {
     this.session?.pressTouch(pointerId, intent)
@@ -76,6 +80,7 @@ export interface GameSessionControls {
   pause(): void
   resume(): void
   retry(): void
+  readonly perfLive: () => { fps: number; entities: number } | null
   press(pointerId: number, intent: Intent): void
   release(pointerId: number): void
 }

@@ -942,6 +942,19 @@ body,
   line-height: 1;
 }
 
+.perf-overlay {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 60%);
+  color: #9f9;
+  font: 12px monospace;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
 .render-counter {
   position: absolute;
   left: 8px;

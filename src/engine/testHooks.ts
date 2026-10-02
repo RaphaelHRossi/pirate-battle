@@ -17,6 +17,18 @@ export interface TestParams {
   manualClock: boolean
   /** `?spawn=off` (test mode only): no enemies spawn on their own. */
   spawnOff: boolean
+  /**
+   * `?perf=1` (any build, no test mode needed): record frame times and
+   * offer a JSON report when the match ends.
+   */
+  perf: boolean
+}
+
+export interface RenderStats {
+  /** Textures uploaded to the GPU by the live renderer. */
+  gpuTextures: number
+  /** Texture objects held in the Pixi Assets cache (shared by sessions). */
+  cachedTextures: number
 }
 
 export interface TestStateSnapshot {
@@ -35,6 +47,8 @@ export interface PirateTestApi {
   advance(ms: number): void
   /** Starts a new match, as the result screen's "Play again" will. */
   restart(): void
+  /** GPU and cached texture counts, for the memory profiling script. */
+  getRenderStats(): RenderStats
 }
 
 declare global {
@@ -59,6 +73,7 @@ export function readTestParams(search: string): TestParams {
     debug: params.get('debug') === '1',
     manualClock: params.get('clock') === 'manual',
     spawnOff: params.get('spawn') === 'off',
+    perf: params.get('perf') === '1',
   }
 }
 
