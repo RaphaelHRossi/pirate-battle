@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
-import { advance, getState, resumeClock } from '../helpers/game'
+import { circleAabbPush, hullCircles } from '../../src/game/collision'
+import { advance, getState, openGame, resumeClock } from '../helpers/game'
 import { expect, test } from '../helpers/test'
 
 interface Report {
@@ -62,4 +63,38 @@ test('without ?perf=1 there is no overlay and no report', async ({ page }) => {
     'ready',
   )
   await expect(page.getByTestId('perf-overlay')).toHaveCount(0)
+})
+
+test('the stress fixture keeps 12 Shooters alive and firing around a player that cannot sink', async ({
+  page,
+}) => {
+  await openGame(page, { fixture: 'stress' })
+  const start = await getState(page)
+  expect(start.world.player.maxHp).toBe(1_000_000)
+
+  await advance(page, 8_000)
+  // Over the last 2 s (one full gun cycle), balls are always in the air.
+  for (let i = 0; i < 20; i++) {
+    await advance(page, 100)
+    const { world } = await getState(page)
+    expect(
+      world.projectiles.filter((p) => p.alive && p.owner === 'enemy').length,
+    ).toBeGreaterThan(0)
+  }
+  const { world } = await getState(page)
+  const alive = world.enemies.filter((e) => e.alive)
+  expect(alive).toHaveLength(world.config.spawn.maxAlive)
+  expect(alive.every((e) => e.kind === 'shooter')).toBe(true)
+  // Being hit all along, nowhere near sinking.
+  expect(world.player.hp).toBeLessThan(world.player.maxHp)
+  expect(world.player.hp).toBeGreaterThan(world.player.maxHp - 2_000)
+  expect(world.match.status).toBe('running')
+  // The ring is clear of the islands (and stays so).
+  for (const enemy of alive) {
+    for (const circle of hullCircles(enemy)) {
+      for (const box of world.map.colliders) {
+        expect(circleAabbPush(circle, box)).toBeNull()
+      }
+    }
+  }
 })

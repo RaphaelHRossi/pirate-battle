@@ -70,6 +70,36 @@ export const GAME_FIXTURES: Readonly<Record<string, (world: World) => void>> = {
     placePlayer(world, 720, 256, Math.PI)
     spawnEnemy(world, 'shooter', 130, 256, 0)
   },
+  /**
+   * Worst case for performance profiling: 12 Shooters (the enemy cap) on a
+   * 360 px ring around the player, all firing, nothing spawning. The
+   * player gets 1,000,000 hp: 12 guns deal at most 60 hp/s, so it cannot
+   * sink in any session (no rule is changed), and as long as the player
+   * does not fire, all 12 stay alive.
+   */
+  stress: (world) => {
+    world.spawn.enabled = false
+    world.player.maxHp = 1_000_000
+    world.player.hp = 1_000_000
+    const { x, y } = world.player
+    const count = world.config.spawn.maxAlive
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2
+      // Facing the player (heading points from the ring to the centre).
+      const shooter = spawnEnemy(
+        world,
+        'shooter',
+        x + Math.cos(angle) * 360,
+        y + Math.sin(angle) * 360,
+        wrapAngle(angle + Math.PI),
+      )
+      // Staggered guns: a steady stream of shots, not one volley every 2 s.
+      if (shooter) {
+        shooter.gunCooldown =
+          (i / count) * world.config.shooter.gun.cooldownSeconds
+      }
+    }
+  },
   /** Player low in the open column, a Shooter 800 px north, out of range. */
   'shooter-far': (world) => {
     world.spawn.enabled = false
