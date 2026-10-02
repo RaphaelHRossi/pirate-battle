@@ -49,7 +49,7 @@ npm run test:visual:update  # rewrite the screenshot baselines
 | —   | Canvas fit, pixel density, resizing, no clipping                      | `layout.spec.ts`                                                                                                                                                               |
 | —   | React Strict Mode mount / unmount (dev server)                        | `tests/dev/strict-mode.spec.ts` (project `dev-strict-mode`)                                                                                                                    |
 | —   | API failures never block options or play                              | `network.spec.ts`                                                                                                                                                              |
-| —   | `?perf=1` recorder                                                    | `perf.spec.ts`                                                                                                                                                                 |
+| —   | `?perf=1` recorder; the `stress` profiling fixture                    | `perf.spec.ts`                                                                                                                                                                 |
 
 ## Visual regression baselines
 

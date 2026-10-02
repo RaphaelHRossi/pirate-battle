@@ -296,18 +296,18 @@ Audited on 2026-10-02 at the commit that adds this file. Full suite: see the end
 
 ## 9. Performance
 
-| #    | Requirement                                                                  | Status  | Evidence                                                                                          |
-| ---- | ---------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| 9.1  | Combat evaluated in an optimised build                                       | Done    | docs/PERFORMANCE.md → Environment (production build, deployed site)                               |
-| 9.2  | 60 FPS target on the documented reference machine                            | Done    | docs/PERFORMANCE.md → Results / Interpretation (p95 6.2 ms against the 16.7 ms budget)            |
-| 9.3  | Frame rate recorded                                                          | Done    | `docs/perf/run-180s-3s.json` (165 FPS); `e2e/perf.spec.ts`                                        |
-| 9.4  | 95th-percentile frame time recorded                                          | Done    | same (6.2 ms)                                                                                     |
-| 9.5  | Entity count recorded                                                        | Done    | same (max 17, avg 8.8)                                                                            |
-| 9.6  | Over a three-minute match                                                    | Done    | same (180 s, 29,700 frames)                                                                       |
-| 9.7  | Memory after five start / play / leave cycles                                | Done    | `docs/perf/memory.json` (`npm run perf:memory`)                                                   |
-| 9.8  | Continuous growth of resources investigated                                  | Done    | docs/PERFORMANCE.md → Interpretation (heap-snapshot diff, WebGL contexts and textures counted)    |
-| 9.9  | Profiling evidence: hardware, browser, resolution, match config, limitations | Done    | docs/PERFORMANCE.md → Environment / Limitations; `docs/perf/environment.json`                     |
-| 9.10 | The heaviest scene (12 enemies alive) profiled                               | Partial | Not explicitly required, but the run peaked at 17 entities; noted in PERFORMANCE.md → Limitations |
+| #    | Requirement                                                                  | Status | Evidence                                                                                                                                                                                                                               |
+| ---- | ---------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9.1  | Combat evaluated in an optimised build                                       | Done   | docs/PERFORMANCE.md → Environment (production build, deployed site)                                                                                                                                                                    |
+| 9.2  | 60 FPS target on the documented reference machine                            | Done   | docs/PERFORMANCE.md → Results / Interpretation (p95 6.2 ms against the 16.7 ms budget)                                                                                                                                                 |
+| 9.3  | Frame rate recorded                                                          | Done   | `docs/perf/run-180s-3s.json` (165 FPS); `e2e/perf.spec.ts`                                                                                                                                                                             |
+| 9.4  | 95th-percentile frame time recorded                                          | Done   | same (6.2 ms)                                                                                                                                                                                                                          |
+| 9.5  | Entity count recorded                                                        | Done   | same (max 17, avg 8.8)                                                                                                                                                                                                                 |
+| 9.6  | Over a three-minute match                                                    | Done   | same (180 s, 29,700 frames)                                                                                                                                                                                                            |
+| 9.7  | Memory after five start / play / leave cycles                                | Done   | `docs/perf/memory.json` (`npm run perf:memory`)                                                                                                                                                                                        |
+| 9.8  | Continuous growth of resources investigated                                  | Done   | docs/PERFORMANCE.md → Interpretation (heap-snapshot diff, WebGL contexts and textures counted)                                                                                                                                         |
+| 9.9  | Profiling evidence: hardware, browser, resolution, match config, limitations | Done   | docs/PERFORMANCE.md → Environment / Limitations; `docs/perf/environment.json`                                                                                                                                                          |
+| 9.10 | The heaviest scene (12 enemies alive) profiled                               | Done   | `docs/perf/stress.json` (`npm run perf:stress`: 12 Shooters firing for 60 s, p95 work time 0.5 ms, p95 frame time 6.2 ms); `e2e/perf.spec.ts › the stress fixture keeps 12 Shooters alive and firing around a player that cannot sink` |
 
 ## 10. Evaluation (cross-cutting)
 
@@ -383,11 +383,10 @@ Each new test was checked against a deliberate break where cheap:
 | 35     | 2.66 Arena readability          | A design judgement, not testable                                | Reviewer judgement; the visual baselines show the result                        |
 | 5      | 6.9 Variable latency (`jitter`) | The scenario exists and is seeded, but has no dedicated test    | A test asserting the same delay sequence for the same `?netSeed=`               |
 | 5      | 7.2 Asset licences              | The assets ship without a licence; it cannot be stated honestly | A licence statement from the challenge authors                                  |
-| 5      | 9.10 Heaviest scene             | The manual run peaked at 5 enemies                              | Another manual run that lets enemies build up to the cap                        |
 | 5      | 11.4 Uptime during evaluation   | Outside the repo                                                | Keep the Vercel project active; push after tonight's commits so 11.3 stays true |
 | —      | 4.10 Input coordinates          | No pointer input on the canvas                                  | —                                                                               |
 
-**Totals:** 244 requirement rows (the twelve §8 groups counted as one row). **238 Done** (11.3 holds until the next push), **5 Partial** (2.66, 6.9, 7.2, 9.10, 11.4), **1 N/A** (4.10), **0 Missing**.
+**Totals:** 244 requirement rows (the twelve §8 groups counted as one row). **239 Done** (11.3 holds until the next push), **4 Partial** (2.66, 6.9, 7.2, 11.4), **1 N/A** (4.10), **0 Missing**.
 
 ## Live deployment check (2026-10-02)
 

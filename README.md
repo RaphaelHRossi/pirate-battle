@@ -178,36 +178,37 @@ Unless stated otherwise, finish a match by playing it out. Setting the session t
 
 ## npm scripts
 
-| Script                            | What it does                                                                  |
-| --------------------------------- | ----------------------------------------------------------------------------- |
-| `npm run dev`                     | Vite dev server with hot reload                                               |
-| `npm run build`                   | Type-check (`tsc -b`) and production build to `dist/`                         |
-| `npm run preview`                 | Serve the production build on port 4173                                       |
-| `npm run typecheck`               | TypeScript in strict mode, no emit                                            |
-| `npm run lint`                    | ESLint (type-checked rules, React Hooks), zero warnings allowed               |
-| `npm run format` / `format:check` | Prettier write / check                                                        |
-| `npm run test:e2e`                | All Playwright tests (desktop + mobile Chromium) against the production build |
-| `npm run test:e2e:ui`             | Playwright's interactive runner                                               |
-| `npm run test:e2e:report`         | Open the last HTML report (`reports/playwright`)                              |
-| `npm run test:visual`             | Screenshot comparisons only                                                   |
-| `npm run test:visual:update`      | Rewrite the screenshot baselines for this OS                                  |
-| `npm run perf:memory`             | Build, then run the 5-cycle memory profile → `docs/perf/memory.json`          |
-| `npm run atlas`                   | Regenerate the Pixi JSON atlas from the Starling XML spritesheet              |
+| Script                            | What it does                                                                              |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Vite dev server with hot reload                                                           |
+| `npm run build`                   | Type-check (`tsc -b`) and production build to `dist/`                                     |
+| `npm run preview`                 | Serve the production build on port 4173                                                   |
+| `npm run typecheck`               | TypeScript in strict mode, no emit                                                        |
+| `npm run lint`                    | ESLint (type-checked rules, React Hooks), zero warnings allowed                           |
+| `npm run format` / `format:check` | Prettier write / check                                                                    |
+| `npm run test:e2e`                | All Playwright tests (desktop + mobile Chromium) against the production build             |
+| `npm run test:e2e:ui`             | Playwright's interactive runner                                                           |
+| `npm run test:e2e:report`         | Open the last HTML report (`reports/playwright`)                                          |
+| `npm run test:visual`             | Screenshot comparisons only                                                               |
+| `npm run test:visual:update`      | Rewrite the screenshot baselines for this OS                                              |
+| `npm run perf:memory`             | Build, then run the 5-cycle memory profile → `docs/perf/memory.json`                      |
+| `npm run perf:stress`             | Build, then run the 60 s worst-case profile (`?fixture=stress`) → `docs/perf/stress.json` |
+| `npm run atlas`                   | Regenerate the Pixi JSON atlas from the Starling XML spritesheet                          |
 
 ## Test and debug parameters
 
 URL parameters, read when the page loads:
 
-| Parameter                  | Effect                                                                                                                                                                           |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `?test=1`                  | Test mode: exposes `window.__pirate` (`getState`, `pauseClock`, `resumeClock`, `advance(ms)`, `restart`, `getRenderStats`). The parameters below marked _test_ only work with it |
-| `?seed=<n or text>`        | Fixed random seed (spawns, AI choices)                                                                                                                                           |
-| `?spawn=off`               | _test_ — no enemies spawn on their own                                                                                                                                           |
-| `?fixture=<name>`          | _test_ — named start state: `island-ahead`, `island-glancing`, `incoming-shot`, `chaser-ahead`, `chaser-behind-island`, `shooter-far`                                            |
-| `?clock=manual`            | _test_ — real time does not move the game; only `__pirate.advance(ms)` does, through the real step and render                                                                    |
-| `?debug=1`                 | Draw island colliders, hull circles and projectile circles                                                                                                                       |
-| `?perf=1`                  | Record frame times and offer a JSON performance report on the result screen (see [PERFORMANCE.md](docs/PERFORMANCE.md))                                                          |
-| `?scenario=` / `?netSeed=` | Mock network scenario, see above                                                                                                                                                 |
+| Parameter                  | Effect                                                                                                                                                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `?test=1`                  | Test mode: exposes `window.__pirate` (`getState`, `pauseClock`, `resumeClock`, `advance(ms)`, `restart`, `getRenderStats`). The parameters below marked _test_ only work with it                                                                                   |
+| `?seed=<n or text>`        | Fixed random seed (spawns, AI choices)                                                                                                                                                                                                                             |
+| `?spawn=off`               | _test_ — no enemies spawn on their own                                                                                                                                                                                                                             |
+| `?fixture=<name>`          | _test_ — named start state: `island-ahead`, `island-glancing`, `incoming-shot`, `chaser-ahead`, `chaser-behind-island`, `shooter-ahead`, `shooter-behind-island`, `shooter-far`, and `stress` (12 firing Shooters around a player that cannot sink, for profiling) |
+| `?clock=manual`            | _test_ — real time does not move the game; only `__pirate.advance(ms)` does, through the real step and render                                                                                                                                                      |
+| `?debug=1`                 | Draw island colliders, hull circles and projectile circles                                                                                                                                                                                                         |
+| `?perf=1`                  | Record frame times and offer a JSON performance report on the result screen (see [PERFORMANCE.md](docs/PERFORMANCE.md))                                                                                                                                            |
+| `?scenario=` / `?netSeed=` | Mock network scenario, see above                                                                                                                                                                                                                                   |
 
 Examples:
 

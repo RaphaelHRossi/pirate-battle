@@ -26,16 +26,27 @@ Collected with PowerShell; raw values in [`perf/environment.json`](perf/environm
 Adding `?perf=1` to the URL enables a recorder in `GameSession` (`src/engine/perf.ts`). It works in production and needs no test mode.
 
 - **Frame time** is the gap between two consecutive `requestAnimationFrame` timestamps. That is the real presented frame interval, simulation and render included.
+- **Work time** is how long our own frame callback takes: the simulation steps, `renderer.sync` and submitting the draw (`app.render()`), timed with `performance.now()`. Unlike frame time it does not depend on the display's refresh rate. GPU execution is asynchronous and not included. Reports made before 2026-10-02 (the three-minute run) do not have it.
 - **Only frames of a match being played count.** The recorder breaks the series on pause, on losing focus, on hiding the tab and when the match ends. Paused or hidden time is never counted as one huge frame.
 - **Entities** are the player plus live enemies, projectiles and effects, sampled every rendered frame. The report has the maximum (and the breakdown at that moment) and the average.
 - **When the match ends** the report is stored locally, and the result screen offers **Download performance report**. The JSON contains:
-  - frames, average FPS, and p50/p95/p99/max frame time
+  - frames, average FPS, and p50/p95/p99/max frame time and work time
   - frames over 16.7 ms and 33.3 ms
   - entity max and average
   - the match config (session and spawn time, plus the full frozen config)
   - user agent, DPR, screen and viewport
 - **Percentiles** are nearest-rank over all recorded frames.
 - **The overlay** shows live FPS. It updates the DOM twice a second, so it costs nothing per frame and never makes React re-render.
+
+### Worst case: `npm run perf:stress`
+
+[`scripts/stress-perf.mjs`](../scripts/stress-perf.mjs) builds the app, serves it with `vite preview`, and runs one 60 s match in installed **Google Chrome**, headless with hardware rendering (`--use-angle=d3d11`). The WebGL renderer string is recorded to prove which GPU drew the frames.
+
+- **The scene:** the test-only fixture `?fixture=stress` (`src/game/fixtures.ts`). It places the enemy cap, **12 Shooters**, on a ring around the player with staggered guns, so they keep firing. Spawning is off.
+- **The player cannot sink:** it gets 1,000,000 hp. Twelve guns deal at most 60 hp/s, so no game rule is changed.
+- **Input:** real keys for the whole match (↑ and ← held, so the player circles). The player does not fire, so all 12 Shooters stay alive.
+- **Sampling:** every 5 s the script records enemies alive, projectiles, effects and player hp. The run is rejected if fewer than 12 enemies are alive at any sample or the console logs an error.
+- **Output:** the `?perf=1` report plus those samples, written to [`perf/stress.json`](perf/stress.json).
 
 ### Memory: `npm run perf:memory`
 
@@ -67,6 +78,23 @@ Source: [`perf/run-180s-3s.json`](perf/run-180s-3s.json): 180 s session, 3 s spa
 | Entities average                                      | 8.8                             |
 | Viewport / DPR                                        | 1920×1080 / 1                   |
 
+### Worst case: 12 Shooters firing for 60 s (`npm run perf:stress`)
+
+Source: [`perf/stress.json`](perf/stress.json), recorded 2026-10-02. Google Chrome 154.0.8037.93 ran headless at 1920×1080, DPR 1, rendering with `ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)`.
+
+| Metric                                                | Value                                      |
+| ----------------------------------------------------- | ------------------------------------------ |
+| Enemies alive (every 5 s sample)                      | **12** in all 11 samples                   |
+| Frames recorded                                       | 9,891 over 60.0 s                          |
+| Average FPS                                           | 164.8 (display pace, as in the manual run) |
+| Frame time p50 / **p95** / p99 / max                  | 6.10 / **6.20** / 6.20 / 54.5 ms           |
+| Frames > 16.7 ms / > 33.3 ms                          | 1 / 1 (of 9,891)                           |
+| **Work time** p50 / **p95** / p99 / max               | 0.2 / **0.5** / 0.6 / 7.0 ms (avg 0.26 ms) |
+| Entities max (enemies / projectiles / effects at max) | 20 (12 / 6 / 1, plus the player)           |
+| Entities average                                      | 18.0                                       |
+| Enemy balls in flight (samples)                       | 4–5                                        |
+| Player hp lost                                        | about 1,600 in 55 s (~30 hp/s)             |
+
 ### Memory after start → play → leave (5 cycles × 15 s)
 
 Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leaving the match and forcing GC.
@@ -89,6 +117,9 @@ Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leavi
   - **p95 is 6.2 ms against the 16.7 ms budget of a 60 FPS frame.** Even p99 is 6.2 ms and the slowest frame of the 3 minutes is 9.07 ms, still below one 60 Hz frame. Not a single frame went over 16.7 ms (or 33.3 ms), so there was no visible stutter.
   - **The game kept up with the 164 Hz display.** The average of 6.06 ms per frame (165 FPS) is the monitor's refresh interval, and p50 = p95 = p99 ≈ 6.1–6.2 ms means frames arrived at an even pace. The real cost of a frame is therefore below 6.1 ms; it cannot be measured more finely from rAF intervals, which are paced by the display.
   - **Read as a 60 FPS budget**, each frame used at most about 37% (p95) to 54% (max) of the 16.7 ms available.
+- **The worst case fits the budget with room to spare.** With the enemy cap reached and every Shooter firing, our frame work has a p95 of **0.5 ms**, about 3% of a 16.7 ms frame. Frame pacing stayed at the 6.1 ms display rate (p95 6.2 ms).
+  - The single long frame (54.5 ms) is 1 in 9,891, about 0.01%. The longest work time was only 7 ms, so it was a browser-side pause (GC, compositing) rather than the game's own code.
+  - **12 enemies sustain fewer entities than expected:** about 18–20, not the "40–50" estimated earlier. A Shooter fires only when aimed within 8°, and at most once every 2 s, so even 12 of them keep only 4–7 balls in the air.
   - **The 164 Hz monitor:** Chrome fires `requestAnimationFrame` at the display rate, so FPS is reported against **164 Hz** (6.1 ms frames), not 60. The game still simulates at a fixed 60 steps/s; extra frames only re-render.
   - **The 60 FPS target:** check it with **p95 ≤ 16.7 ms** and few frames over 33.3 ms. Average FPS alone hides stutter; p95 is what a player feels.
   - **On a 60 Hz display** the same run caps at ~60 FPS; the frame-time percentiles are the comparable figures.
@@ -109,7 +140,10 @@ Source: [`perf/memory.json`](perf/memory.json). Every value is taken after leavi
 - **One machine, one browser, one run:** no variance across runs or devices was measured, and mobile performance was not profiled on a real phone.
 - **GC is forced** before each memory reading. Real sessions hold more garbage between collections.
 - **The 15 s cycles are short.** Long matches are covered by the 3-minute run, not by the memory script.
-- **The 3-minute run peaked at 17 entities** (5 enemies). Enemies were sunk about as fast as they spawned, so the cap of 12 enemies (with their shots and effects, roughly 40–50 entities) was never reached. The heaviest possible scene was therefore not measured; given a p95 at a third of the budget, it is unlikely to approach 16.7 ms on this machine, but that is an extrapolation.
+- **The heaviest scene is measured, with caveats.** The 3-minute manual run peaked at 17 entities (5 enemies), so the cap was measured separately with the `stress` fixture: 12 Shooters firing for 60 s, p95 work time 0.5 ms (see Worst case). Its caveats:
+  - **Headless browser:** it ran headless (Chrome with hardware D3D11), not in a visible window.
+  - **The player does not fire:** player shots (up to about 3 front balls and 6 broadside balls in flight, plus muzzle flashes) would add some entities, but sinking enemies would then drop the enemy count below 12.
+  - **GPU time is not included in work time:** frame time shows the GPU kept pace (p95 6.2 ms at the 164 Hz display rate).
 - **A 164 Hz display caps what rAF can show.** Frame times measure presented frames, so they show the display pace (6.1 ms) and an upper bound on the work per frame, not its exact cost.
 - **The `?perf=1` overlay** and the recorder's `number[]` (about 30k entries for 3 min at 164 Hz) add a small constant overhead.
 
