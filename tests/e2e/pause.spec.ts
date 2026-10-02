@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import type { TestStateSnapshot } from '../../src/engine/testHooks'
-import { getState, openGame, resumeClock } from '../helpers/game'
+import { advance, getState, openGame, resumeClock } from '../helpers/game'
 import { expect, test } from '../helpers/test'
 
 /** The parts of the state that must not move while paused. */
@@ -97,4 +97,29 @@ test('P pauses, Escape resumes and does not pause again', async ({ page }) => {
   await page.waitForTimeout(300)
   expect((await getState(page)).paused).toBe(false)
   await expect(pauseDialog(page)).toBeHidden()
+})
+
+test('keys pressed while paused do nothing once the game resumes', async ({
+  page,
+}) => {
+  await openGame(page)
+  const start = await getState(page)
+  await page.keyboard.press('KeyP')
+  await expect(pauseDialog(page)).toBeVisible()
+
+  // Held and tapped during the pause: the game is not listening.
+  await page.keyboard.down('ArrowUp')
+  await page.keyboard.down('Space')
+  await page.keyboard.press('KeyE')
+  await page.getByRole('button', { name: 'Resume' }).click()
+  await expect(pauseDialog(page)).toBeHidden()
+
+  await advance(page, 500)
+  const after = await getState(page)
+  expect(after.world.projectiles.filter((p) => p.alive)).toEqual([])
+  expect(after.world.player.x).toBe(start.world.player.x)
+  expect(after.world.player.y).toBe(start.world.player.y)
+  expect(after.world.player.cooldowns).toEqual({ front: 0, left: 0, right: 0 })
+  await page.keyboard.up('Space')
+  await page.keyboard.up('ArrowUp')
 })
