@@ -8,6 +8,7 @@ This is a requirement-by-requirement check of [CHALLENGE.md](CHALLENGE.md). Each
 - **Partial:** only part of it is evidenced, or it cannot be fully satisfied from this repository.
 - **Missing:** not done.
 - **N/A:** outside the repository, or not applicable to this design.
+- **Evidence outside the repository** (an email, for example) is cited as such and marked as stated by the author. Only 0.5 relies on it.
 
 The rule is skeptical: without a test or code to point to, it is not Done.
 
@@ -26,7 +27,7 @@ Audited on 2026-10-02 at the commit that adds this file. Full suite: see the end
 | 0.2 | The player navigates between islands                        | Done   | `e2e/movement.spec.ts`, `e2e/island.spec.ts`                                                                                           |
 | 0.3 | The player fights enemy ships                               | Done   | `e2e/enemies.spec.ts`                                                                                                                  |
 | 0.4 | The player accumulates points until the match ends          | Done   | `e2e/enemies.spec.ts › destroying a Chaser with cannon fire scores exactly one point`; `e2e/hud.spec.ts › the HUD score follows kills` |
-| 0.5 | Give a time estimate before starting                        | N/A    | A process step, done outside the repository; nothing in the repo can show it                                                           |
+| 0.5 | Give a time estimate before starting                        | Done   | Estimate sent by email to the recruiter on 2026-09-30, before starting (outside the repository; stated by the author)                  |
 
 ## 1. Required stack
 
@@ -377,17 +378,16 @@ Each new test was checked against a deliberate break where cheap:
 
 ### Still Partial or N/A
 
-| Weight | Item                              | Why it stays                                                    | What would close it                                                             |
-| ------ | --------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 35     | 2.66 Arena readability            | A design judgement, not testable                                | Reviewer judgement; the visual baselines show the result                        |
-| 5      | 6.9 Variable latency (`jitter`)   | The scenario exists and is seeded, but has no dedicated test    | A test asserting the same delay sequence for the same `?netSeed=`               |
-| 5      | 7.2 Asset licences                | The assets ship without a licence; it cannot be stated honestly | A licence statement from the challenge authors                                  |
-| 5      | 9.10 Heaviest scene               | The manual run peaked at 5 enemies                              | Another manual run that lets enemies build up to the cap                        |
-| 5      | 11.4 Uptime during evaluation     | Outside the repo                                                | Keep the Vercel project active; push after tonight's commits so 11.3 stays true |
-| —      | 0.5 Time estimate before starting | A process step outside the repo                                 | Was (or was not) given by message                                               |
-| —      | 4.10 Input coordinates            | No pointer input on the canvas                                  | —                                                                               |
+| Weight | Item                            | Why it stays                                                    | What would close it                                                             |
+| ------ | ------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 35     | 2.66 Arena readability          | A design judgement, not testable                                | Reviewer judgement; the visual baselines show the result                        |
+| 5      | 6.9 Variable latency (`jitter`) | The scenario exists and is seeded, but has no dedicated test    | A test asserting the same delay sequence for the same `?netSeed=`               |
+| 5      | 7.2 Asset licences              | The assets ship without a licence; it cannot be stated honestly | A licence statement from the challenge authors                                  |
+| 5      | 9.10 Heaviest scene             | The manual run peaked at 5 enemies                              | Another manual run that lets enemies build up to the cap                        |
+| 5      | 11.4 Uptime during evaluation   | Outside the repo                                                | Keep the Vercel project active; push after tonight's commits so 11.3 stays true |
+| —      | 4.10 Input coordinates          | No pointer input on the canvas                                  | —                                                                               |
 
-**Totals:** 244 requirement rows (the twelve §8 groups counted as one row). **237 Done** (11.3 holds until the next push), **5 Partial** (2.66, 6.9, 7.2, 9.10, 11.4), **2 N/A** (0.5, 4.10), **0 Missing**.
+**Totals:** 244 requirement rows (the twelve §8 groups counted as one row). **238 Done** (11.3 holds until the next push), **5 Partial** (2.66, 6.9, 7.2, 9.10, 11.4), **1 N/A** (4.10), **0 Missing**.
 
 ## Live deployment check (2026-10-02)
 
