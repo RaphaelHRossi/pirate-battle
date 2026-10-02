@@ -1,4 +1,4 @@
-import { QueryClient, type Mutation } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
 import type { MatchRecord } from './contracts'
 import { putMatch } from './endpoints'
 import { isRetryable } from './http'
@@ -45,7 +45,9 @@ export function createQueryClient(): QueryClient {
 }
 
 /** The matchId a saveMatch mutation is sending, if any. */
-export function savedMatchId(mutation: Mutation): string | null {
+export function savedMatchId(mutation: {
+  readonly state: { readonly variables: unknown }
+}): string | null {
   const variables = mutation.state.variables
   if (
     typeof variables === 'object' &&

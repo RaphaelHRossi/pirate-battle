@@ -44,9 +44,10 @@ export function useHistory(playerId: string, page: number) {
 /**
  * Sends outbox records. `send` skips a record already being sent, so a
  * flush, a Retry click and a new match can never race two requests for
- * the same match (and the server would dedupe them anyway).
+ * the same match (and the server would dedupe them anyway). Returns
+ * false when the record was skipped for that reason.
  */
-export function useSendMatch(): (record: MatchRecord) => void {
+export function useSendMatch(): (record: MatchRecord) => boolean {
   const client = useQueryClient()
   const { mutate } = useMutation<MatchRecord, Error, MatchRecord>({
     mutationKey: SAVE_MATCH_KEY,
@@ -57,7 +58,9 @@ export function useSendMatch(): (record: MatchRecord) => void {
         .getMutationCache()
         .findAll({ mutationKey: SAVE_MATCH_KEY, status: 'pending' })
         .some((mutation) => savedMatchId(mutation) === record.matchId)
-      if (!inFlight) mutate(record)
+      if (inFlight) return false
+      mutate(record)
+      return true
     },
     [client, mutate],
   )
