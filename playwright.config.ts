@@ -24,6 +24,9 @@ export default defineConfig({
   snapshotPathTemplate:
     '{testDir}/{testFileDir}/__screenshots__/{arg}-{projectName}-{platform}{ext}',
   expect: {
+    // Loading the game's assets through the Service Worker can take a few
+    // seconds with two workers and both servers busy; 5 s was too tight.
+    timeout: 10_000,
     toHaveScreenshot: {
       // Up to 1% of pixels may differ (GPU/anti-aliasing noise).
       maxDiffPixelRatio: 0.01,
