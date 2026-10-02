@@ -1,0 +1,173 @@
+{
+  "recordedAt": "2026-10-02T01:19:02.970Z",
+  "browser": "Chromium 153.0.8010.12 (Playwright, headless)",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "deviceScaleFactor": 1,
+  "cycles": 12,
+  "playSecondsPerCycle": 5,
+  "baseline": {
+    "heapUsedMB": 4.78,
+    "heapTotalMB": 5.34,
+    "domNodes": 124,
+    "jsEventListeners": 172,
+    "canvases": 0
+  },
+  "results": [
+    {
+      "cycle": 1,
+      "heapUsedMB": 7.01,
+      "heapTotalMB": 7.59,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 2,
+      "heapUsedMB": 7.21,
+      "heapTotalMB": 7.59,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 37,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 3,
+      "heapUsedMB": 7.39,
+      "heapTotalMB": 7.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 4,
+      "heapUsedMB": 7.48,
+      "heapTotalMB": 8.09,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 5,
+      "heapUsedMB": 7.61,
+      "heapTotalMB": 7.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 6,
+      "heapUsedMB": 7.69,
+      "heapTotalMB": 8.34,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 7,
+      "heapUsedMB": 7.74,
+      "heapTotalMB": 8.34,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 8,
+      "heapUsedMB": 7.78,
+      "heapTotalMB": 8.59,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 3,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 9,
+      "heapUsedMB": 8.1,
+      "heapTotalMB": 8.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 10,
+      "heapUsedMB": 8.13,
+      "heapTotalMB": 8.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 11,
+      "heapUsedMB": 8.19,
+      "heapTotalMB": 8.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 12,
+      "heapUsedMB": 8.21,
+      "heapTotalMB": 8.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 35,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 2,
+      "matchStatusAtLeave": "running"
+    }
+  ],
+  "summary": {
+    "heapGrowthFromBaselineMB": 3.43,
+    "heapGrowthFromCycle1MB": 1.2,
+    "canvasesAfterEachCycle": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "cachedTexturesPerCycle": [
+      180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180
+    ]
+  },
+  "consoleErrors": []
+}

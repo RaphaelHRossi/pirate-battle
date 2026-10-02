@@ -1,0 +1,31 @@
+{
+  "collectedAt": "2026-10-01",
+  "collectedWith": "PowerShell Get-CimInstance (Win32_Processor, Win32_VideoController, Win32_ComputerSystem, Win32_OperatingSystem), Chrome/Edge BLBeacon registry keys, System.Windows.Forms.Screen",
+  "cpu": {
+    "name": "AMD Ryzen 5 5600GT with Radeon Graphics",
+    "cores": 6,
+    "threads": 12,
+    "maxClockMHz": 3600
+  },
+  "gpu": [
+    {
+      "name": "NVIDIA GeForce RTX 5060",
+      "driver": "32.0.16.1714",
+      "display": "1920x1080 @ 164 Hz (primary)"
+    },
+    {
+      "name": "AMD Radeon(TM) Graphics (integrated)",
+      "driver": "31.0.12027.9001",
+      "display": "none"
+    }
+  ],
+  "ramGB": 13.9,
+  "system": "Micro-Star International MS-7C96",
+  "os": "Microsoft Windows 11 IoT Enterprise LTSC Evaluation 10.0.26100 (64-bit)",
+  "browsers": {
+    "chrome": "154.0.8037.93",
+    "edge": "154.0.4258.48",
+    "playwrightChromium": "153.0.8010.12 (headless, used by the memory script)"
+  },
+  "screens": ["1920x1080 (primary)", "1920x1080"]
+}

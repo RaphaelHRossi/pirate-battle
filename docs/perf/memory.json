@@ -1,0 +1,87 @@
+{
+  "recordedAt": "2026-10-02T01:21:43.923Z",
+  "browser": "Chromium 153.0.8010.12 (Playwright, headless)",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "deviceScaleFactor": 1,
+  "cycles": 5,
+  "playSecondsPerCycle": 15,
+  "baseline": {
+    "heapUsedMB": 4.77,
+    "heapTotalMB": 5.34,
+    "domNodes": 124,
+    "jsEventListeners": 172,
+    "canvases": 0
+  },
+  "results": [
+    {
+      "cycle": 1,
+      "heapUsedMB": 7.11,
+      "heapTotalMB": 7.59,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 38,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 5,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 2,
+      "heapUsedMB": 7.32,
+      "heapTotalMB": 7.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 36,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 7,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 3,
+      "heapUsedMB": 7.43,
+      "heapTotalMB": 7.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 38,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 4,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 4,
+      "heapUsedMB": 7.54,
+      "heapTotalMB": 7.84,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 36,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 8,
+      "matchStatusAtLeave": "running"
+    },
+    {
+      "cycle": 5,
+      "heapUsedMB": 7.66,
+      "heapTotalMB": 8.34,
+      "domNodes": 127,
+      "jsEventListeners": 184,
+      "canvases": 0,
+      "gpuTexturesDuringPlay": 37,
+      "cachedTextures": 180,
+      "entitiesAtLeave": 9,
+      "matchStatusAtLeave": "running"
+    }
+  ],
+  "summary": {
+    "heapGrowthFromBaselineMB": 2.89,
+    "heapGrowthFromCycle1MB": 0.55,
+    "canvasesAfterEachCycle": [0, 0, 0, 0, 0],
+    "cachedTexturesPerCycle": [180, 180, 180, 180, 180]
+  },
+  "consoleErrors": []
+}
