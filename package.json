@@ -17,6 +17,7 @@
     "test:visual": "playwright test tests/visual",
     "test:visual:update": "playwright test tests/visual --update-snapshots",
     "perf:memory": "npm run build && node scripts/memory-cycles.mjs",
+    "perf:stress": "npm run build && node scripts/stress-perf.mjs",
     "atlas": "node scripts/convert-starling-atlas.mjs"
   },
   "dependencies": {

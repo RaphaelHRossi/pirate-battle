@@ -1,0 +1,187 @@
+{
+  "recordedAt": "2026-10-02T15:00:31.078Z",
+  "browser": "chromium 154.0.8037.93 (headless, --use-angle=d3d11 --enable-gpu --ignore-gpu-blocklist)",
+  "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "deviceScaleFactor": 1,
+  "fixture": "stress",
+  "input": "ArrowUp + ArrowLeft held (circling, not firing)",
+  "report": {
+    "version": 1,
+    "recordedAt": "2026-10-02T15:00:25.421Z",
+    "durationSeconds": 60,
+    "frames": 9891,
+    "avgFps": 164.84,
+    "frameTimeMs": {
+      "avg": 6.07,
+      "p50": 6.1,
+      "p95": 6.2,
+      "p99": 6.2,
+      "max": 54.5
+    },
+    "workTimeMs": {
+      "avg": 0.255,
+      "p50": 0.2,
+      "p95": 0.5,
+      "p99": 0.6,
+      "max": 7
+    },
+    "longFrames": {
+      "over16_7ms": 1,
+      "over33_3ms": 1
+    },
+    "entities": {
+      "max": 20,
+      "avg": 18,
+      "atMax": {
+        "enemies": 12,
+        "projectiles": 6,
+        "effects": 1
+      }
+    },
+    "config": {
+      "sessionSeconds": 60,
+      "spawnSeconds": 3
+    },
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+      "devicePixelRatio": 1,
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      }
+    }
+  },
+  "samples": [
+    {
+      "atSeconds": 5,
+      "secondsLeft": 55,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 5,
+      "projectiles": 5,
+      "effects": 1,
+      "entities": 19,
+      "playerHp": 999840
+    },
+    {
+      "atSeconds": 10,
+      "secondsLeft": 50,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 999660
+    },
+    {
+      "atSeconds": 15,
+      "secondsLeft": 45,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 999510
+    },
+    {
+      "atSeconds": 20,
+      "secondsLeft": 40,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 999350
+    },
+    {
+      "atSeconds": 25,
+      "secondsLeft": 35,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 999180
+    },
+    {
+      "atSeconds": 30,
+      "secondsLeft": 30,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 999040
+    },
+    {
+      "atSeconds": 35,
+      "secondsLeft": 25,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 998870
+    },
+    {
+      "atSeconds": 40,
+      "secondsLeft": 20,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 998720
+    },
+    {
+      "atSeconds": 45,
+      "secondsLeft": 15,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 1,
+      "entities": 18,
+      "playerHp": 998560
+    },
+    {
+      "atSeconds": 50,
+      "secondsLeft": 10,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 5,
+      "projectiles": 5,
+      "effects": 0,
+      "entities": 18,
+      "playerHp": 998400
+    },
+    {
+      "atSeconds": 55,
+      "secondsLeft": 5,
+      "status": "running",
+      "enemiesAlive": 12,
+      "enemyProjectiles": 4,
+      "projectiles": 4,
+      "effects": 0,
+      "entities": 17,
+      "playerHp": 998250
+    }
+  ],
+  "minEnemiesAlive": 12,
+  "consoleErrors": []
+}
