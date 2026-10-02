@@ -11,6 +11,13 @@ function fillImage(ratio: number): string {
   return uiImage('hud/health_fill_red')
 }
 
+/** Spoken name of the match state (the HUD is only shown in a match). */
+const STATUS_LABEL: Partial<Record<GameSnapshot['status'], string>> = {
+  running: 'Playing',
+  paused: 'Paused',
+  ended: 'Over',
+}
+
 interface HudProps {
   snapshot: GameSnapshot
   onPause: () => void
@@ -28,6 +35,10 @@ export function Hud({ snapshot, onPause }: HudProps) {
 
   return (
     <section className="hud" aria-label="Match status">
+      {/* Read on demand like the values below; events go to the Announcer. */}
+      <p className="visually-hidden" data-testid="hud-status">
+        Status: {STATUS_LABEL[status] ?? 'Loading'}
+      </p>
       <div className="hud-health">
         <img className="hud-heart" src={uiImage('hud/icon_heart')} alt="" />
         <div

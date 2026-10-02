@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { expectNoSeriousA11yViolations } from '../helpers/axe'
-import { finishMatchByTime, openGame } from '../helpers/game'
+import { advance, finishMatchByTime, getState, openGame } from '../helpers/game'
 import { expect, test } from '../helpers/test'
 
 /** The element has a clearly visible focus indicator. */
@@ -190,9 +190,46 @@ test('the HUD exposes health, score and time as text, not a live region', async 
   await expect(hud).toContainText('Score: 0')
   await expect(hud).toContainText('Time left: 02:00')
   await expect(hud).not.toHaveAttribute('aria-live')
+
+  // The match state is there too, kept up to date but never announced
+  // from the HUD itself.
+  const status = page.getByTestId('hud-status')
+  await expect(status).toHaveText('Status: Playing')
+  await page.keyboard.press('KeyP')
+  await expect(status).toHaveText('Status: Paused')
+  await page.keyboard.press('Escape')
+  await expect(status).toHaveText('Status: Playing')
+  const { durationSeconds } = (await getState(page)).world.config.match
+  await advance(page, durationSeconds * 1000)
+  await expect(status).toHaveText('Status: Over')
   // Events are spoken by a separate polite live region (see hud.spec).
   await expect(page.getByTestId('announcer')).toHaveAttribute(
     'aria-live',
     'polite',
   )
+})
+
+test('the main menu shows the controls for keyboard and touch', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const guide = page.getByRole('region', { name: 'Controls' })
+  const table = guide.getByRole('table')
+  await expect(table.getByRole('columnheader')).toHaveText([
+    'Action',
+    'Keyboard',
+    'Touch',
+  ])
+  const rows: readonly (readonly [string, string])[] = [
+    ['Sail forward', 'W or ↑'],
+    ['Turn', 'A / D or ← / →'],
+    ['Bow cannon', 'Space'],
+    ['Port / starboard broadside', 'Q / E'],
+    ['Pause', 'P or Esc'],
+  ]
+  for (const [action, key] of rows) {
+    await expect(
+      table.getByRole('row', { name: new RegExp(`^${action}`) }),
+    ).toContainText(key)
+  }
 })
