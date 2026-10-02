@@ -140,3 +140,28 @@ test('a projectile damages a ship exactly once', async ({ page }) => {
   expect(end.world.player.hp).toBe(start.world.player.maxHp - damage)
   expect(aliveProjectiles(end)).toHaveLength(0)
 })
+
+test('a ball that leaves the arena is removed at the edge', async ({
+  page,
+}) => {
+  await openGame(page)
+  // Sail north (the open column) to about 200 px from the top edge.
+  await page.keyboard.down('ArrowUp')
+  await advance(page, 1900)
+  await page.keyboard.up('ArrowUp')
+  const { world } = await getState(page)
+  const { radius } = world.config.projectiles
+  const ttlSteps = Math.round(world.config.player.frontGun.ttlSeconds * 60)
+
+  await tap(page, 'Space')
+  let lastY = Infinity
+  const steps =
+    1 +
+    (await stepsUntilGone(page, ([ball]) => {
+      if (ball) lastY = ball.y
+    }))
+  // Gone long before its ttl, last seen within one step of the edge.
+  expect(steps).toBeLessThan(ttlSteps)
+  const stepTravel = world.config.player.frontGun.speed / 60
+  expect(lastY).toBeLessThan(radius + stepTravel)
+})

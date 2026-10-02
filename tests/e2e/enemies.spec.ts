@@ -166,3 +166,131 @@ test('enemies spawn once per interval, clear of islands and the player', async (
     }
   }
 })
+
+test('a Shooter respects islands: it never ends up inside one', async ({
+  page,
+}) => {
+  await openGame(page, { fixture: 'shooter-behind-island' })
+  const start = await getState(page)
+  const [first] = aliveEnemies(start)
+  if (!first) throw new Error('no shooter')
+
+  let state = start
+  for (let i = 0; i < 100; i++) {
+    await advance(page, 100)
+    state = await getState(page)
+    for (const enemy of aliveEnemies(state)) {
+      for (const circle of hullCircles(enemy)) {
+        for (const box of state.world.map.colliders) {
+          const push = circleAabbPush(circle, box)
+          expect(push ? Math.hypot(push.x, push.y) : 0).toBeLessThan(1e-6)
+        }
+      }
+    }
+  }
+  // It kept advancing (around or along the island), not stuck in place.
+  const [shooter] = aliveEnemies(state)
+  if (!shooter) throw new Error('shooter vanished')
+  expect(Math.hypot(shooter.x - first.x, shooter.y - first.y)).toBeGreaterThan(
+    100,
+  )
+  // ...and turned to do so.
+  expect(shooter.heading).not.toBeCloseTo(first.heading, 2)
+})
+
+test('a Shooter takes damage from cannon fire and sinks after three hits', async ({
+  page,
+}) => {
+  await openGame(page, { fixture: 'shooter-ahead' })
+  const start = await getState(page)
+  const { damage } = start.world.config.player.frontGun
+  const maxHp = start.world.config.shooter.maxHp
+
+  const seen = new Set<number>()
+  await page.keyboard.down('Space')
+  let state = start
+  for (let i = 0; i < 40 && aliveEnemies(state).length > 0; i++) {
+    await advance(page, 100)
+    state = await getState(page)
+    const [shooter] = aliveEnemies(state)
+    if (shooter) seen.add(shooter.hp)
+  }
+  await page.keyboard.up('Space')
+
+  // 60 → 40 → 20 → sunk: whole hits of the front gun's damage.
+  expect([...seen].sort((a, b) => b - a)).toEqual([
+    maxHp,
+    maxHp - damage,
+    maxHp - 2 * damage,
+  ])
+  expect(aliveEnemies(state)).toHaveLength(0)
+  expect(state.world.match.score).toBe(1)
+})
+
+test('a destroyed enemy no longer fires, deals damage or collides', async ({
+  page,
+}) => {
+  await openGame(page, { fixture: 'shooter-ahead' })
+  await page.keyboard.down('Space')
+  let state = await getState(page)
+  for (let i = 0; i < 40 && aliveEnemies(state).length > 0; i++) {
+    await advance(page, 100)
+    state = await getState(page)
+  }
+  await page.keyboard.up('Space')
+  expect(aliveEnemies(state)).toHaveLength(0)
+  const sunkAt = state.world.enemies.find((e) => e.kind === 'shooter')
+  if (!sunkAt) throw new Error('no shooter slot')
+  const lastIdAtDeath = state.world.nextEntityId
+
+  // Let any ball already in flight land or expire.
+  await advance(page, 2000)
+  state = await getState(page)
+  const enemyBalls = state.world.projectiles.filter(
+    (p) => p.alive && p.owner === 'enemy',
+  )
+  expect(enemyBalls).toEqual([])
+  // Nothing new was fired by the dead Shooter.
+  expect(
+    state.world.projectiles.some(
+      (p) => p.owner === 'enemy' && p.id >= lastIdAtDeath,
+    ),
+  ).toBe(false)
+  const hpBefore = state.world.player.hp
+  const yBefore = state.world.player.y
+
+  // Sail straight through where it sank: no push, no damage.
+  await page.keyboard.down('ArrowUp')
+  await advance(page, 2500)
+  await page.keyboard.up('ArrowUp')
+  const after = await getState(page)
+  const { speed } = after.world.config.player
+  expect(after.world.player.y).toBeLessThan(sunkAt.y)
+  expect(yBefore - after.world.player.y).toBeCloseTo(speed * 2.5, 0)
+  expect(after.world.player.hp).toBe(hpBefore)
+})
+
+test('a Shooter fires no faster than its gun cooldown', async ({ page }) => {
+  await openGame(page, { fixture: 'shooter-ahead' })
+  const { cooldownSeconds } = (await getState(page)).world.config.shooter.gun
+  const shots = new Map<number, number>()
+  for (let step = 0; step < 600; step += 6) {
+    await advance(page, 100)
+    const { world } = await getState(page)
+    for (const ball of world.projectiles) {
+      if (ball.alive && ball.owner === 'enemy' && !shots.has(ball.id)) {
+        shots.set(ball.id, world.elapsedSeconds)
+      }
+    }
+  }
+  const times = [...shots.values()].sort((a, b) => a - b)
+  // 10 s at one shot per 2 s: 5 or 6 shots, never closer than the cooldown
+  // (sampled every 0.1 s, so allow one sample of slack).
+  expect(times.length).toBeGreaterThanOrEqual(4)
+  expect(times.length).toBeLessThanOrEqual(10 / cooldownSeconds + 1)
+  for (let i = 1; i < times.length; i++) {
+    expect((times[i] ?? 0) - (times[i - 1] ?? 0)).toBeGreaterThan(
+      cooldownSeconds - 0.1 - 1e-9,
+    )
+  }
+})
