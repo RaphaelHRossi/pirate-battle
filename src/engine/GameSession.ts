@@ -517,11 +517,14 @@ export class GameSession {
     const onFrame = (now: number): void => {
       // Only frames of a match being played count (not the end freeze).
       const perf = this.match?.perf
+      const measured = this.match?.world.match.status === 'running'
       if (perf) {
-        if (this.match?.world.match.status === 'running') perf.frame(now)
+        if (measured) perf.frame(now)
         else perf.gap()
       }
+      const workStart = perf ? performance.now() : 0
       this.loop.frame(now)
+      if (perf && measured) perf.work(performance.now() - workStart)
       this.frameId = requestAnimationFrame(onFrame)
     }
     this.frameId = requestAnimationFrame(onFrame)

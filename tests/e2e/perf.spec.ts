@@ -6,6 +6,7 @@ interface Report {
   frames: number
   avgFps: number
   frameTimeMs: { p50: number; p95: number; p99: number; max: number }
+  workTimeMs: { p50: number; p95: number; p99: number; max: number }
   entities: { max: number }
   config: { sessionSeconds: number; spawnSeconds: number }
 }
@@ -47,6 +48,9 @@ test('?perf=1 records real frames and offers the report on the result screen', a
   expect(report.avgFps).toBeGreaterThan(0)
   expect(report.frameTimeMs.p95).toBeGreaterThanOrEqual(report.frameTimeMs.p50)
   expect(report.frameTimeMs.max).toBeGreaterThanOrEqual(report.frameTimeMs.p99)
+  expect(report.workTimeMs.p50).toBeGreaterThan(0)
+  expect(report.workTimeMs.p95).toBeGreaterThanOrEqual(report.workTimeMs.p50)
+  expect(report.workTimeMs.max).toBeGreaterThanOrEqual(report.workTimeMs.p99)
   expect(report.entities.max).toBeGreaterThanOrEqual(1)
   expect(report.config).toMatchObject({ sessionSeconds: 120, spawnSeconds: 3 })
 })

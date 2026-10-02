@@ -15,6 +15,19 @@ export interface PerfReport {
     p99: number
     max: number
   }
+  /**
+   * Time our own code spent per frame (simulation steps, renderer sync
+   * and submitting the draw), measured with performance.now() around the
+   * frame callback. Independent of the display's refresh rate; GPU work
+   * runs asynchronously and is not included.
+   */
+  workTimeMs: {
+    avg: number
+    p50: number
+    p95: number
+    p99: number
+    max: number
+  }
   /** Frames slower than one 60 Hz frame, and than two. */
   longFrames: { over16_7ms: number; over33_3ms: number }
   entities: {
@@ -76,6 +89,7 @@ const round = (value: number, digits = 2): number =>
  */
 export class PerfRecorder {
   private readonly frameTimes: number[] = []
+  private readonly workTimes: number[] = []
   private lastFrameMs: number | null = null
   private entitySamples = 0
   private entitySum = 0
@@ -90,6 +104,11 @@ export class PerfRecorder {
     if (this.lastFrameMs !== null)
       this.frameTimes.push(nowMs - this.lastFrameMs)
     this.lastFrameMs = nowMs
+  }
+
+  /** Duration of one frame's work (only frames of the match being played). */
+  work(ms: number): void {
+    this.workTimes.push(ms)
   }
 
   gap(): void {
@@ -119,6 +138,8 @@ export class PerfRecorder {
     const totalMs = sorted.reduce((sum, ms) => sum + ms, 0)
     const frames = sorted.length
     const { enemies, projectiles, effects } = this.maxEntities
+    const work = [...this.workTimes].sort((a, b) => a - b)
+    const workTotal = work.reduce((sum, ms) => sum + ms, 0)
     return {
       version: 1,
       recordedAt: new Date().toISOString(),
@@ -131,6 +152,13 @@ export class PerfRecorder {
         p95: round(percentile(sorted, 95)),
         p99: round(percentile(sorted, 99)),
         max: round(sorted.at(-1) ?? 0),
+      },
+      workTimeMs: {
+        avg: work.length > 0 ? round(workTotal / work.length, 3) : 0,
+        p50: round(percentile(work, 50), 3),
+        p95: round(percentile(work, 95), 3),
+        p99: round(percentile(work, 99), 3),
+        max: round(work.at(-1) ?? 0, 3),
       },
       longFrames: {
         over16_7ms: sorted.filter((ms) => ms > 1000 / 60 + 0.5).length,
