@@ -134,7 +134,14 @@ export function CaptainsLog({ tab }: { tab: LogTab }) {
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    const index = TABS.findIndex((entry) => entry.tab === tab)
+    // Start from the focused tab, not the `tab` prop: selecting a tab
+    // moves focus at once but re-renders only on the next hashchange, so
+    // fast key presses would otherwise read a stale selection.
+    const focused = TABS.findIndex(
+      (entry) => tabRefs.current.get(entry.tab) === event.target,
+    )
+    const index =
+      focused !== -1 ? focused : TABS.findIndex((entry) => entry.tab === tab)
     const last = TABS.length - 1
     const target = {
       ArrowRight: index === last ? 0 : index + 1,
